@@ -1,0 +1,19 @@
+# latex
+doc-blx.bib
+doc.aux
+doc.log
+doc.out
+doc.pdf
+doc.run.xml
+
+# libs
+lib/libhelpers.a
+
+# taskjuggler
+tj/tjOutput
+
+# vim
+*.swp
+
+# c objects
+*.o
