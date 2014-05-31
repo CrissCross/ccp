@@ -17,3 +17,6 @@ tj/tjOutput
 
 # c objects
 *.o
+
+# c tags file
+tags
