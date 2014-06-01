@@ -1,0 +1,16 @@
+
+CREATE abc 6\n
+
+UPDATE abc 3\n
+
+LIST\n
+
+CREATE aaaabc 6\n
+
+LIST\n
+
+DELETE abc\n
+
+STOP\n
+
+

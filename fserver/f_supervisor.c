@@ -82,7 +82,6 @@ int f_sv_setup_shm()
   // shared memory name needs a extra slash in front
   char shm_fname[strlen(superv_name) + 1];
   sprintf(shm_fname, "/%s", superv_name);
-  printf("Create shared memory for the file supervisor %s\n",shm_fname );
   //
   // size of content to save in shm
 
@@ -110,11 +109,14 @@ int f_sv_setup_shm()
     return -1;
   }
 
-  printf("Check\n");
   // Copy /END to the first place in the file name array
-  strncpy(superv->files[0], "/END\0",5);
+  strncpy(superv->files[0], "/END",4);
+  superv->files[0][4] = '\00';
 
-  printf("New shared memory %s for the file supervisor is born.\n", shm_fname);
+  // set count to 0
+  superv->count = 0;
+
+  printf("Created new shared memory segment %s for the file supervisor.\n\n", shm_fname);
 
   return 0;
 }
@@ -156,26 +158,24 @@ int f_sv_add(char *fname)
     }
 
 
-    if(strncmp(superv->files[i], "/END", 4) == 0 )
-    { // this i the end of the file supervisir array 
+    int endTest = strncmp(superv->files[i], "/END", 4);
+    if(endTest == 0 || superv->files[i][0] == '\00')
+    { // this place is free 
 
-      strncpy(superv->files[i], fname, fname_len < F_MAX_LEN ? fname_len : F_MAX_LEN);
-      printf("Added new file to end of array, index is: %d\n", i);
+      // copy file name and increase counter
+      strncpy(superv->files[i], fname, (fname_len+1) < F_MAX_LEN ? (fname_len+1) : F_MAX_LEN);
+      superv->files[i][fname_len] = '\00';
+      superv->count++;
+
+      printf("Added new file, index is: %d, we have now %d  files on the server.\n", i, superv->count);
 
       if ( (i+1) < F_LIMIT )
-      { // there is free space for at least one more file name 
+      { // there is free space for at least one more file name, lets mark the end
 
         strncpy(superv->files[i+1], "/END",4);
         superv->files[i+1][4] = '\00';
       }
-      break;
-    }
 
-    else if (superv->files[i][0] == '\0')
-    { // this place is free
-
-      strncpy(superv->files[i], fname, fname_len < F_MAX_LEN ? fname_len : F_MAX_LEN);
-      printf("Added new file to an empty gap at index is: %d\n", i);
       break;
     }
     else
@@ -227,32 +227,22 @@ int f_sv_del(char *fname)
     if(strncmp(superv->files[i], fname, fname_len) == 0 )
     { // this is the file we have been looking for
       
-      if (i+1 >= F_LIMIT)
-      { // this is the last element of the array
+      // decrease number of files count
+      superv->count--;
+
+      if (i - superv->count >= 0)
+      { // I am the last file in the array, lets mark the end 
           strncpy(superv->files[i], "/END",4);
           superv->files[i][4] = '\00';
-          break;
-      }
-
-      // there is place for another file next to the current
-      // we have to check if there are other entries after the current 
-      if (strncmp(superv->files[i+1], "/END", 4) == 0)
-      { // the next file place holder was the endmost used element in the array
-
-        // now the current element is the endmost
-        strncpy(superv->files[i], "/END",4);
-        superv->files[i][4] = '\00';
       }
       else
       { // there are other file names after the current
-
-        // we set the current file name to empty
         superv->files[i][0] = '\00';
-
       }
 
       break;
     }
+
     i++;
 
   }

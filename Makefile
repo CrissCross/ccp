@@ -3,15 +3,18 @@
 ##
 
 CC = gcc
-CFLAGS = -Wall -g -O2 -std=gnu99 -I include -lrt
+CFLAGS = -Wall -g -O2 -std=gnu99 -I include -lrt -lbsd
 
-objects = server_ctrl.o f_supervisor.o shm_f_action.o error_handler.o
+objects = server_ctrl.o fserver_io.o f_supervisor.o shm_f_action.o error_handler.o
 
 edit : $(objects)
 	cc $(CFLAGS) -o edit $(objects)
 
 server_ctrl.o : fserver/server_ctrl.c
 	cc $(CFLAGS) -c fserver/server_ctrl.c 
+
+fserver_io.o : fserver/fserver_io.c
+	cc $(CFLAGS) -c fserver/fserver_io.c
 
 f_supervisor.o : fserver/f_supervisor.c
 	cc $(CFLAGS) -c fserver/f_supervisor.c 

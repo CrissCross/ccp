@@ -50,7 +50,6 @@ int create_shm_f(char *fname, char *fcontent)
   }
 
   strcpy(shm_fcontent, fcontent);
-  //shm_fcontent[strlen(fcontent) - 1] = '\0';
 
   printf("New shared memory file %s with the following content is born:\n%s\n", shm_fname, shm_fcontent);
   ///shm_unlink("/greeting");
@@ -69,11 +68,14 @@ int update_shm_f(char *fname, char *fcontent)
   printf("Update file: %s\n",shm_fname );
   //
   // size of content to save in shm
+  printf("Before content size\n" );
   int fcontent_size = strlen(fcontent)*sizeof(char);
 
 
   // create new shm segment, return error if already there
+  printf("Before open\n" );
   fd = shm_open(shm_fname, O_RDWR, S_IRUSR | S_IWUSR);
+  printf("After open\n" );
   if(handle_error(fd, "Could not open shm", NO_EXIT) == -1)
   {
     return -1;
@@ -99,7 +101,6 @@ int update_shm_f(char *fname, char *fcontent)
   }
 
   strcpy(shm_fcontent, fcontent);
-  //shm_fcontent[strlen(fcontent) - 1] = '\0';
 
   printf("New shared memory file %s updated.\n", shm_fname);
   ///shm_unlink("/greeting");
