@@ -1,3 +1,6 @@
+*(\n
+
+*(
 
 CREATE abc 6\n
 

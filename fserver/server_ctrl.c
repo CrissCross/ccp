@@ -49,13 +49,14 @@ int main (int argc, char **argv)
   int cyc_count = 0;
   while (1)
   { // break if max_cycle reached
+    printf("Cycle count: round %d\n", cyc_count-1);
     if(cyc_count > max_cycle) break;
     cyc_count++;
 
     struct cmd_info *cmd = get_cmd();
     if ( cmd == NULL )
     {
-      printf("Cycle count: round %d\n", cyc_count-1);
+      printf("Error while getting command.\n\n");
       continue;
     }
 

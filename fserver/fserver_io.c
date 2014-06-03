@@ -8,10 +8,15 @@
 #include <helpers.h>
 #include <fserver.h>
 
-#define CMD_LEN 200
+// max length of one command line
+#define CMD_LINE_LEN 200
+// max cmds taken from an input file
+#define CMDS_PER_FILE 15
 
 
 
+
+int valid_cmd (char *str);
 
 int valid_fname(char *str);
 
@@ -26,7 +31,8 @@ struct cmd_info *get_cmd()
 
   int i = 0;
   printf("Reading lines:\n");
-  while(i<15)
+
+  while( i < CMDS_PER_FILE )
   { // read max 15 commands
     read = getline(&cmd_line, &len, stdin);
     if(handle_my_error(read, "Error reading input", NO_EXIT) == -1)
@@ -49,13 +55,23 @@ struct cmd_info *get_cmd()
       i++;
       continue;
     }
-    if (read > 0 && read < CMD_LEN)
+    if (read > 0 && read < CMD_LINE_LEN)
     {
       // allocate mem for cmd struct
       cinfo = (struct cmd_info *) malloc(sizeof(struct cmd_info));
+      
       // Content comes later
       cinfo->content = NULL;
       printf("%d\tread %d chars: %s", i, (int) read, cmd_line);
+
+      // Check if the command ends with \n
+      if ( strncmp( &cmd_line[read-3], "\\n", 2) != 0)
+      { 
+        printf("Command line must be terminated with '\\n' which is not the case.\n");
+        free(cinfo);
+        return NULL;
+      }
+
 
       // length of cmd line without "\n" at the end
       int rel_len = (int) read - 2;
@@ -72,7 +88,19 @@ struct cmd_info *get_cmd()
 
       // Let's see if there are parameters:
       char *cmd_snip = strsep(&tempbuf, " ");
+
+      //
       printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
+
+      // Check if command is Uppercase if not, break
+      if ( valid_cmd(cmd_snip) == 0 )
+      {
+        printf("Unknown command\n");
+        free(free_tempbuf);
+        free(cinfo);
+        return NULL;
+      }
+
 
       if (strcmp(cmd_snip, "LIST") == 0)
       {
@@ -169,7 +197,7 @@ int print_f_asread ()
     
     read = getline(&cmd_line, &len, stdin);
 
-    if (read > 0 && read < CMD_LEN)
+    if (read > 0 && read < CMD_LINE_LEN)
     {
       if(strcmp(cmd_line,"\n") == 0)
         printf("%d\t\n",i);
@@ -249,10 +277,33 @@ int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
   return 0;
 }
 
+int valid_cmd (char *str)
+{ // validate a command (Uppercase letter, not longer than "UPDATE")
+  int str_len = strlen(str);
+  if (str_len > strlen("UPDATE"))
+  {
+    handle_my_error(-1, "Command is too long", NO_EXIT);
+    return 0;
+  }
 
+  // in case last char is a 0-terminator, do not check last byte
+  if ( str[str_len-1] == '\0' || str[str_len-1] == '\00' )
+    str_len--;
+
+  for ( int i = 0; i < str_len; i++)
+  {
+    if ( isalpha(str[i]) == 0 || isupper(str[i] == 0) )
+    {
+      handle_my_error(-1, "Command is not uppercase", NO_EXIT);
+      return 0;
+    }
+  }
+
+  return 1;
+}
 
 int valid_fname(char *str)
-{
+{ // validate a file name
   int str_len = strlen(str);
   if (str_len > F_MAX_LEN)
   {
