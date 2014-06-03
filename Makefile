@@ -7,8 +7,8 @@ CFLAGS = -Wall -g -O2 -std=gnu99 -I include -lrt -lbsd
 
 objects = server_ctrl.o fserver_io.o f_supervisor.o shm_f_action.o error_handler.o
 
-edit : $(objects)
-	cc $(CFLAGS) -o edit $(objects)
+fserver : $(objects)
+	cc $(CFLAGS) -o fserver $(objects)
 
 server_ctrl.o : fserver/server_ctrl.c
 	cc $(CFLAGS) -c fserver/server_ctrl.c 
@@ -26,7 +26,7 @@ error_handler.o : lib/error_handler.c
 	cc $(CFLAGS) -c lib/error_handler.c
 
 clean :
-	rm edit $(objects)
+	rm fserver $(objects)
 
 #clean:
 #	rm -f cscope.out makeOut/*

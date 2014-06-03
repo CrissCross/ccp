@@ -1,7 +1,8 @@
-ZHAW Seminar Concurrent C Programming Cristoffel Gehring
+ZHAW Seminar Concurrent C Programming Cristoffel Gehring 2014-06-03
 Abstract:
 	: Einen TCP File Server unter Einsatz von Shared Memory programmieren.
-[git Repository https://github.com/CrissCross/ccp.git]
+git Repository
+	https://github.com/CrissCross/ccp.git
 Beteiligte:
 	Dozent: 
 	Student: Cristoffel Gehring
@@ -23,7 +24,7 @@ Vorgehen
 	: Rucksack - soll das Projekt in Angriff genommen werden. Das Vorgehen lässt
 	: sich in folgende Phasen unterteilen:
 	17.05 Mindstorming
-	24.05 User Stories schreiben
+	24.05 Milestones definieren
 	25.05 Tasks definieren und in Sprints einteilen 
 	29.05 Programmieren
 	01.06 Finish
@@ -223,28 +224,34 @@ Mindstorming
 					- Weiter bei 1
 				c DS wurde vollständig durchlaufen.
 					- OP completed
-Milestones und Tasks
-	- Sprint 1: Server kann Shared Memory verwalten (ohne Interaktion mit dem Anwender)
+Milestones und Tasks, Stand 25. Mai
+	: Die Projektaufgabe wurde in vier Milestones gegliedert, die aufeinander aufbauend realisiert
+	: werden können. Die Intensiv-Entwicklungsphase wurde auf das Wochenende um
+	: Auffahrt angesetzt. In einem Sprint soll ein Milestone entstehen, der
+	: getestet werden kann, wobei ein Sprint einem Tag entspricht. Am Abend
+	: wird das Programmierte getestet und das Fazit gezogen.  Anschliessend wird
+	: der nächste Sprint defnitiv geplant.
+	- Sprint 1, 29. Mai: Server kann Shared Memory verwalten (ohne Interaktion mit dem Anwender)
 		: Eine Routine, die alle CRUDL Operationen ausführt, wird durchlaufen. Die
 		: Antworten werden ausgegeben(stdout).
 		Tasks
 			[X] Umgebung einrichten
-				1 h
+				2 h
 			[X] Neue shm Datei kreieren
 				2 h
 			[X] Datei löschen
 				1 h
 			[X] Datei aktualisieren
 				1 h
-			[X] Datei im DS kreieren
+			[_] Datei im DS kreieren
 				3 h
-			[X] Datei im DS löschen
+			[_] Datei im DS löschen
 				1 h
-			[X] DS: Liste mit aktuellen Dateien ausgeben
+			[_] DS: Liste mit aktuellen Dateien ausgeben
 				1 h
-			[X] Dateien im DS suchen
+			[_] Dateien im DS suchen
 				1 h
-	- Sprint 2: Server kann Befehle ab Datei interpretieren
+	- Sprint 2, 31. Mai: Server kann Befehle ab Datei interpretieren
 		: Eine Datei wird über stdin gelesen. Die Befehle sind darin im gleichen
 		: Format wie auf dem offiziellen git Repository im Ordner protokoll
 		: festgehalten. Damit wird der Eingang der TCP-Nachrichten simuliert. Der
@@ -265,11 +272,7 @@ Milestones und Tasks
 				- send ACKs
 			[X] Life cycle Input, Process, Output funktioniert mit Ein- und Ausgabedatei 
 				2 h
-			[_] TCP/IP server
-				3 h
-				- TCP Server programmieren
-				- File Server einbetten
-	- Sprint 3: TCP/IP Socket aufsetzen 
+	- Sprint 3, 1. Juni: TCP/IP Socket aufsetzen 
 		: Der Server wird um ein TCP/IP Socket erweitert. Jetzt liest der Client
 		: die Eingabedatei und schickt sie an den Server. Der Server antwortet
 		: entsprechend.
@@ -278,12 +281,53 @@ Milestones und Tasks
 				3 h
 			[_] TCP Client programmieren
 				2 h
-	- Sprint 4: Finish
+			[_] Client kann Server stoppen
+				2 h
+			[_] Client kann Shared Memory räumen
+				2 h
+			[_] Client kann Shared Memory aufsetzen
+				1 h
+	- Sprint 4 TBD: Finish
 		: Die Dokumentation wird in ein leserliches Format gepackt. Wenn Zeit
 		: bleibt, können zusätzliche Funktionen implementiert werden. 
 		Tasks
 			[_] Doku fertig machen
 				4 h
+Fazit nach dem ersten Sprint, 29. Mai
+	: Der erste Tag hat viel Spass gemacht. Wohl etwas zuviel Spass, denn oft
+	: bin ich von einer effektiven Programmierweise in die unendlichen Weiten
+	: der C-Welt abgedriftet. Dies fing schon bei der Einrichtung der Umgebung
+	: an. Meine bisherige Praxis, die eigenen Bibiotheken kam mir immer sehr
+	: umständlich vor. Deshalb habe ich mich umfassend mit diesem Thema befasst.
+	: Da man die Bibliotheken dann über das Makefile einbinden muss, habe ich
+	: mich auch noch mit der Strukturierung und Handhabung des Makefiles
+	: ausführlich beschäftigt. Das Resultat war ein wunderschön schlankes
+	: Makefile, aber als ich dann auf die Uhr schaute, musste ich feststellen,
+	: dass die zwei Stunden, die ich für das Einrichten der Umgebung eingeplant
+	: hatte, längst verstrichen waren. 
+	;
+	: So war ich am Ende des Tages froh, dass die ich Shared Memory Funktionen
+	: implementieren konnte und das Testing positiv verlief. Die Implementierung
+	: des DS musste ich auf den nächsten Sprint verschieben.
+	Tasks
+		[X] Umgebung einrichten
+			2 h
+		[X] Neue shm Datei kreieren
+			2 h
+		[X] Datei löschen
+			1 h
+		[X] Datei aktualisieren
+			1 h
+		[X] Datei lesen
+			1 h
+		[_] Datei im DS kreieren
+			3 h
+		[_] Datei im DS löschen
+			1 h
+		[_] DS: Liste mit aktuellen Dateien ausgeben
+			1 h
+		[_] Dateien im DS suchen
+			1 h
 Background info
 	Shared Mem. Model
 		- each process splits its virtual mem into pages

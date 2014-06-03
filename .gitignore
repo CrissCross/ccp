@@ -6,6 +6,9 @@ doc.out
 doc.pdf
 doc.run.xml
 
+# doku outputs
+*.html
+
 # libs
 lib/libhelpers.a
 
