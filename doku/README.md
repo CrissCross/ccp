@@ -1,9 +1,9 @@
 # Documentation
-## Generate a html documentation
+## Generate html documentation
 ```
 $ ./gen_html_doku.sh
 ```
-## Generate a pdf documentation
+## Generate pdf documentation
 1. Generate html documentation as indicated above
 2. Use the tool [wkhtmltopdf](http://code.google.com/p/wkhtmltopdf/) to generate a pdf out of it.
 ```
