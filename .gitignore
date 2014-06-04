@@ -8,6 +8,7 @@ doc.run.xml
 
 # doku outputs
 *.html
+*.pdf
 
 # libs
 lib/libhelpers.a

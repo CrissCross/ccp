@@ -4,10 +4,10 @@ Abstract:
 git Repository
 	https://github.com/CrissCross/ccp.git
 Beteiligte:
-	Dozent: 
+	Dozent: Nico Schottelius
 	Student: Cristoffel Gehring
 KickOff Meeting 13. März
-	: Die Aufgabe wurde von vorgestellt. Ihm Rahmen des Projekts soll eines der
+	: Die Aufgabe wurde von Nico Schottelius vorgestellt. Ihm Rahmen des Projekts soll eines der
 	: folgenden Programme entwickelt werden.
 	- File Server
 	- Multi-User-Editor
@@ -18,7 +18,7 @@ KickOff Meeting 13. März
 Vorgehen
 	: Zum gleichen Modul gehörend läuft parallel die Vorlesung
 	: Systemprogrammierung, in der die für das Projekt nötigen Werkzeuge
-	: behandelt werden. Deshalb besteht keine Eile mit dem Starten des Projekts.
+	: hoffentlich behandelt werden. Deshalb besteht keine Eile mit dem Starten des Projekts.
 	: Vielmehr liegt der Fokus auf dem Kurs Betriebssysteme bzw. dessen Prüfung,
 	: die am 12. Mai statt findet. Im Anschluss - mit dem nötigen Rüstzeugs im
 	: Rucksack - soll das Projekt in Angriff genommen werden. Das Vorgehen lässt
@@ -29,20 +29,20 @@ Vorgehen
 	29.05 Programmieren
 	01.06 Finish
 Mindstorming
-	: Der Ablauf des Programmes wird durchgespielt. Die notwendigen Technologien
-	: werden aufgelisted und mit den behandelten Technologien aus de Unterricht
-	: abgeglichen. Darauf ergibt sich folgendes Bild:
-	- Grober Ablauf 
+	: Der Ablauf des Programmes wurde durchgespielt. Die notwendigen Technologien
+	: wurden aufgelistet und mit den behandelten Technologien aus dem Unterricht
+	: abgeglichen. Darauf ergab sich folgendes Bild:
+	- Grober Ablauf / Life Circle des Servers
 		- Programm startet
 			- Shared Memory und Semaphoren aufsetzen 
 			- TCP Socket aufbauen und auf Verbindung warten
-			- Verbingung kommt zustande 
+			- Verbindung kommt zustande 
 				- Fork und loop
-					: loop kann von Client durch Abbrechen der Verbindung beendet
+					: Loop kann von Client durch Abbrechen der Verbindung beendet
 					: werden.
 					- Befehl von Client entgegennehmen und in Puffer schreiben
 						- Input Validation
-						- Im Struct speichern (falls Argymente nötig, diese auch im Strukt speichern),
+						- Im Strukt speichern (falls Argumente nötig, diese auch im Strukt speichern),
 					- Befehl interpretieren
 					- Entsprechende Operationen im Shared Memory ausführen
 					- Antwort an Client in Puffer schreiben
@@ -52,12 +52,12 @@ Mindstorming
 			- Server räumt Shared Memory auf.
 			- Server beendet.
 	- Shared Memory
-		: Im Unterricht wurde die XSI Impelementation des Shared Memory
+		: Im Unterricht wurde die XSI Implementation des Shared Memory
 		: besprochen. Im Verlauf der Recherche bin ich aber auf die neuere POSIX
-		: implementation des Shared Memory gestossen. Ich war einigermassen
+		: Implementation des Shared Memory gestossen. Ich war einigermassen
 		: überrascht, weil diese in der 2013er Ausgabe
-		: des Buchs Advanced Prgramming in the UNIX Environment nicht erwähnt
-		: werden. Aber die Man Pages sind vorhanden und überzeugen.  Posix Shared
+		: des Buchs Advanced Programming in the UNIX Environment nicht erwähnt
+		: werden. Aber die Man Pages sind vorhanden und überzeugen.  POSIX Shared
 		: Memory ist nämlich weniger aufwendig in der Anwendung. Unter anderem
 		: verzichtet es auf den Key, der bei der XSI Version für jedes Segment
 		: erzeugt werden muss. Die Segmente werden einfach mit einem Namen erzeugt
@@ -70,9 +70,11 @@ Mindstorming
 				; - Jede Datei braucht einen eigenen Schlüssel
 				; - Bei einem Update muss das Segment gelöscht und mit der neuen Grösse neu angelegt werden.
 				: (Eigentlich nur nötig, wenn die neue Datei grösser als die alte ist).
-			2 Grosses Shared Memory Segment anlegen (String), Dateien werden mit Pointer getrennt
+			2 Grosses Shared Memory Segment anlegen (Char-Array)
+				: Dateien werden mit einem '\00' getrennt und mit einem Pointer auf
+				: die Stelle gefunden.
 				; + Nur ein Schlüssel nötig
-				; - Beim Löschen einer Datei, die nicht die letzte im String ist, tut sich eine Lücke auf.
+				; - Memory Management Beim Löschen einer Datei, die nicht die letzte im String ist, tut sich eine Lücke auf.
 				; - Relativ komplizierte Handhabung von Pointer auf die hoffentlich richtigen Stellen.
 				; - Bereiche des Char-Arrays müssen gelockt werden.
 			Entscheide mich für Möglichkeit 1
@@ -81,20 +83,21 @@ Mindstorming
 	- Semaphore
 		: Um die Shared Memory Bereiche vom gleichzeitigen Zugriff zu schützen
 		: werden Semaphore angewendet. Jede angelegte Datei bekommt einen
+		: Semaphore.
 		: Auch hier fiel die Wahl auf die POSIX Implementierung. Im Gegensatz zum
 		: Shared Memory findet sich dazu auch ein Kapitel im Buch Advanced
-		: Prgramming in the UNIX Environment.
-		: Semaphore. POSIX Semaphore werden über Namen angesprochen und nicht über
+		: Programming in the UNIX Environment.
+		: POSIX Semaphore werden über Namen angesprochen und nicht über
 		: komplizierte Identifier wie die System V Semaphore. Nichts liegt
 		: näher als den Semaphoren den Namen jener Datei zu geben, die es bewachen
 		: soll.
 	- TCP Socket
 		: Dazu findet sich ein grosses Kapitel im Buch sowie unzählige Ressourcen
 		: im Internet. Ausserdem wurde ein TCP Server in einer Übung der Vorlesung
-		: Systemprogrammierung programmeirt.
+		: Systemprogrammierung programmiert.
 	- Limits
 		: Welche Limits für Variablen, Puffer usw. sind zu beachten?
-		- Grösst möglicher Dateiinhalt
+		- Grösstmöglicher Datei Inhalt
 		- Maximale Länge eines Dateinamen 
 		- Maximale Anzahl der Dateien auf dem System
 	- Welche CRUDL Operationen dürfen parallel laufen?
@@ -113,17 +116,11 @@ Mindstorming
 		| D | X | X | X | X | X |
 		| L | X | O | O | X | O |
 	- DS: der Datei-Supervisor
-		: Der DS ist nichts anderes als ein Array von Dateinamen. Da wir insgesamt
-		: höchstens 254 Dateien anlegen können, besitzt das Array 254 Elemente.
-		: Der DS bekommt ein eigenes Shared Memory Segment. 
-		; 
-		: Dank diesem DS kann nun sichergestellt werden, dass gelöschte
-		: Dateien keine Plätze mehr besetzen und, dass die frei gewordenen
-		: Plätze wieder neu besetzt werden können.
-		; 
-		: Mit einem Semaphore auf den DS wird verhindert, dass beim parallelen
-		: Erstellen von Dateien, die gleichen Plätze für mehrere Dateien
-		: verwendet werden.
+		: Der DS ist nichts anderes als ein Array von Dateinamen. Weil man laut
+		: Aufgabenstellung das echte Dateisystem des OS nicht berühren darf,
+		: wird der DS dazu verwendet, über die erstellten Dateien Buch zu führen.
+		: Wird eine Datei im Shared Memory erstellt, muss der Dateinamen ebenfalls
+		: im DS eingefügt werden.
 	- Ablauf der CRUDL Operationen
 		Create Ablauf
 			1 Dateiname und Inhalt in zwei separaten Puffern speichern
@@ -134,9 +131,9 @@ Mindstorming
 				b Freie Stelle
 					- Dateinamen an die Stelle kopieren
 					- Semaphore dekrementieren
-						- Shared Memory selbst mit der Grösse des Dateiinhalts erzeugen.
-						- Im Shared Mem einen String kreeiren
-						- Dateiinhalt in den String kopieren.
+						- Shared Memory selbst mit der Grösse des Datei Inhalts erzeugen.
+						- Im Shared Mem einen String kreieren
+						- Datei Inhalt in den String kopieren.
 					- Semaphore inkrementieren
 					- Abbruch 'DS durchlaufen', Datei wurde erstellt
 				c DS wurde vollständig durchlaufen.
@@ -146,18 +143,17 @@ Mindstorming
 			2 DS durchlaufen.
 				a Besetzte Stelle:
 					- Dateiname mit dem übergebenen Dateinamen vergleichen
-						a Dateiname stimmt überein
-							- Semaphore überprüfen.
-								a Semaphore = 0
-									- 'File busy' antworten
-									- Lesevorgang abbrechen
-								b Semaphore = 1
-									- shm_open
-									- fstat(fd2, &buf);
-									- einen Puffer mit der Grösse des Shared Mem Bereichs kreeiren
-									- Dateiinhalt in Puffer kopieren
-									- Puffer an Client senden
-									- Lesevorgang abbrechen
+						a Dateiname stimmt überein -> Semaphore überprüfen.
+							a Semaphore = 0
+								- 'File busy' antworten
+								- Lesevorgang abbrechen
+							b Semaphore = 1
+								- shm_open
+								- fstat(fd2, &buf);
+								- einen Puffer mit der Grösse des Shared Mem Bereichs kreeiren
+								- Dateiinhalt in Puffer kopieren
+								- Puffer an Client senden
+								- Lesevorgang abbrechen
 						b Dateiname stimmt nicht überein
 							- DS weiterhin durchlaufen
 				b Freie Stelle
@@ -167,29 +163,28 @@ Mindstorming
 		Delete Ablauf 
 			1 Dateiname der zu löschenden Datei in einem Puffer speichern
 			2 DS durchlaufen.
-				a Besetzte Stelle:
-					- Dateiname mit dem übergebenen Dateinamen vergleichen
-						a Dateiname stimmt überein
-							- Semaphore dekrementieren
-								: WICHIG: Zuerst wird der Shared Memory Bereich mit dem Inhalt
-								: zerstört, danach erst wird der Dateiname im DS gelöscht. Das
-								: muss so sein, weil die Semaphore über den Dateinamen
-								: identifiziert werden. Würde man den Dateinamen zuerst
-								: löschen, könnte man danach für einen kurzen Moment den
-								: Shared Memory Bereich mit dem Ihnalt nicht mehr schützen.
-								: Käme genau zu diesem Zeitpunkt ein weiter Prozess, der eine
-								: Datei anlegen will, würde er sehen, dass an dieser Stelle
-								: noch kein Eintrag besteht. Er würde einen neuen Dateinamen
-								: an die Stelle kopieren und versuchen, einen Shared Memory
-								: Bereich für genau diesen Index zu generieren. Dieser Index
-								: wäre aber noch von der alten Datei besetzt und so würde der
-								: Versuch mit einem Fehler enden.
-								- Shared Memory Bereich zerstören; sem_unlink;
-								- An der Stelle im DS einen leeren String einfügen.
-							- Semaphore dekrementieren
-							- Löschvorgang ist somit beendet
-						b Dateiname stimmt nicht überein
-							- Weiter bei 2
+				a Besetzte Stelle -> Dateiname mit dem übergebenen Dateinamen vergleichen
+					a Dateiname stimmt überein
+						- Semaphore dekrementieren
+							: WICHTIG: Zuerst wird der Shared Memory Bereich mit dem Inhalt
+							: zerstört, danach erst wird der Dateiname im DS gelöscht. Das
+							: muss so sein, weil die Semaphore über den Dateinamen
+							: identifiziert werden. Würde man den Dateinamen zuerst
+							: löschen, könnte man danach für einen kurzen Moment den
+							: Shared Memory Bereich mit dem Inhalt nicht mehr schützen.
+							: Käme genau zu diesem Zeitpunkt ein weiter Prozess, der eine
+							: Datei anlegen will, würde er sehen, dass an dieser Stelle
+							: noch kein Eintrag besteht. Er würde einen neuen Dateinamen
+							: an die Stelle kopieren und versuchen, einen Shared Memory
+							: Bereich für genau diesen Index zu generieren. Dieser Index
+							: wäre aber noch von der alten Datei besetzt und so würde der
+							: Versuch mit einem Fehler enden.
+							- Shared Memory Bereich zerstören; sem_unlink;
+							- An der Stelle im DS einen leeren String einfügen.
+						- Semaphore dekrementieren
+						- Löschvorgang ist somit beendet
+					b Dateiname stimmt nicht überein
+						- Weiter bei 2
 				b Freie Stelle
 					- Weiter bei 2
 				c DS wurde vollständig durchlaufen.
@@ -197,21 +192,20 @@ Mindstorming
 		Update Ablauf
 			1 Neuer Dateiname und Inhalt in zwei separaten Puffern speichern
 			2 DS durchlaufen.
-				a Besetzte Stelle:
-					- Dateiname mit dem übergebenen Dateinamen vergleichen
-						a Dateiname stimmt überein
-							: Optimierungsmöglichkeit: Grösse des neuen Inhalt mit der
-							: momentanen Grösse vergleichen. Falls der neue Ihnalt gleich
-							: gross oder kleiner ist, muss man das shm Segment nicht neu
-							: anlegen.
-							- Semaphore dekrementieren
-								- Shared Memory öffnen: sem_open
-								- Shared Memory der neuen Grösse anpassen: ftruncate(fd, size)
-								- Inhalt kopieren
-							- Semaphore inkrementieren
-							- 'UPDATED' an den Client schicken 
-						- Dateiname stimmt nicht überein
-							- Weiter bei 2
+				a Besetzte Stelle -> Dateiname mit dem übergebenen Dateinamen vergleichen
+					a Dateiname stimmt überein
+						: Optimierungsmöglichkeit: Grösse des neuen Inhalt mit der
+						: momentanen Grösse vergleichen. Falls der neue Inhalt gleich
+						: gross oder kleiner ist, muss man das shm Segment nicht neu
+						: anlegen.
+						- Semaphore dekrementieren
+							- Shared Memory öffnen: sem_open
+							- Shared Memory der neuen Grösse anpassen: ftruncate(fd, size)
+							- Inhalt kopieren
+						- Semaphore inkrementieren
+						- 'UPDATED' an den Client schicken 
+					b Dateiname stimmt nicht überein
+						- Weiter bei 2
 				b Keine besetzte Stelle
 					- Weiter bei 2
 				c DS wurde vollständig durchlaufen.
@@ -226,67 +220,53 @@ Mindstorming
 					- OP completed
 Milestones und Tasks, Stand 25. Mai
 	: Die Projektaufgabe wurde in vier Milestones gegliedert, die aufeinander aufbauend realisiert
-	: werden können. Die Intensiv-Entwicklungsphase wurde auf das Wochenende um
-	: Auffahrt angesetzt. In einem Sprint soll ein Milestone entstehen, der
+	: werden und unabhänging voneinander funktionieren. Die Intensiv-Entwicklungsphase wurde auf das Wochenende um
+	: Auffahrt angesetzt. In einem Sprint soll jeweils ein Milestone entstehen, der
 	: getestet werden kann, wobei ein Sprint einem Tag entspricht. Am Abend
 	: wird das Programmierte getestet und das Fazit gezogen.  Anschliessend wird
-	: der nächste Sprint defnitiv geplant.
+	: der nächste Sprint definitiv geplant.
 	- Sprint 1, 29. Mai: Server kann Shared Memory verwalten (ohne Interaktion mit dem Anwender)
 		: Eine Routine, die alle CRUDL Operationen ausführt, wird durchlaufen. Die
 		: Antworten werden ausgegeben(stdout).
 		Tasks
-			[X] Umgebung einrichten
-				2 h
-			[X] Neue shm Datei kreieren
-				2 h
-			[X] Datei löschen
-				1 h
-			[X] Datei aktualisieren
-				1 h
-			[_] Datei im DS kreieren
-				3 h
-			[_] Datei im DS löschen
-				1 h
-			[_] DS: Liste mit aktuellen Dateien ausgeben
-				1 h
-			[_] Dateien im DS suchen
-				1 h
+			[_] 2h Umgebung einrichten
+				- Hilfsfunktionen für die Fehlerbehandlung einbauen
+				- Makefile
+				- git
+			[_] 2h Neue shm Datei kreieren
+			[_] 1h Datei löschen
+			[_] 1h Datei aktualisieren
+			[_] 1h Datei im DS kreieren
+			[_] 1h Datei im DS löschen
 	- Sprint 2, 31. Mai: Server kann Befehle ab Datei interpretieren
 		: Eine Datei wird über stdin gelesen. Die Befehle sind darin im gleichen
-		: Format wie auf dem offiziellen git Repository im Ordner protokoll
+		: Format wie auf dem offiziellen git Repository im Ordner Protokoll
 		: festgehalten. Damit wird der Eingang der TCP-Nachrichten simuliert. Der
 		: Anwender kann alle CRUDL Operationen in eine Datei schreiben, und diese
 		: vom Programm abarbeiten lassen.
 		Tasks
-			[_] Semaphore implementieren
-				3 h
-			[X] Input von Befehlen per Datei 
-				3 h
+			[_] 1h DS: Liste mit aktuellen Dateien ausgeben
+			[_] 1h Dateien im DS suchen
+			[_] 2h Input von Befehlen per Datei 
 				- read_cmd
 				- read content
 				- input validation
 				- save cmd and parameters in a struct
-			[X] Output von Antworten 
-				2 h
+			[_] 2h Output von Antworten 
 				- send list of files
 				- send ACKs
-			[X] Life cycle Input, Process, Output funktioniert mit Ein- und Ausgabedatei 
-				2 h
+			[_] 2h Life cycle Input, Process, Output funktioniert mit Ein- und Ausgabedatei 
+			[_] 1h Semaphore implementieren
 	- Sprint 3, 1. Juni: TCP/IP Socket aufsetzen 
 		: Der Server wird um ein TCP/IP Socket erweitert. Jetzt liest der Client
 		: die Eingabedatei und schickt sie an den Server. Der Server antwortet
 		: entsprechend.
 		Tasks
-			[_] TCP Server einbauen
-				3 h
-			[_] TCP Client programmieren
-				2 h
-			[_] Client kann Server stoppen
-				2 h
-			[_] Client kann Shared Memory räumen
-				2 h
-			[_] Client kann Shared Memory aufsetzen
-				1 h
+			[_] 3h TCP Server einbauen
+			[_] 2h TCP Client programmieren
+			[_] 2h Client kann Server stoppen
+			[_] 1h Client kann Shared Memory räumen
+			[_] 1h Client kann Shared Memory aufsetzen
 	- Sprint 4 TBD: Finish
 		: Die Dokumentation wird in ein leserliches Format gepackt. Wenn Zeit
 		: bleibt, können zusätzliche Funktionen implementiert werden. 
@@ -297,7 +277,7 @@ Fazit nach dem ersten Sprint, 29. Mai
 	: Der erste Tag hat viel Spass gemacht. Wohl etwas zuviel Spass, denn oft
 	: bin ich von einer effektiven Programmierweise in die unendlichen Weiten
 	: der C-Welt abgedriftet. Dies fing schon bei der Einrichtung der Umgebung
-	: an. Meine bisherige Praxis, die eigenen Bibiotheken kam mir immer sehr
+	: an. Meine bisherige Praxis, die eigenen Bibliotheken einzubinden, kam mir sehr
 	: umständlich vor. Deshalb habe ich mich umfassend mit diesem Thema befasst.
 	: Da man die Bibliotheken dann über das Makefile einbinden muss, habe ich
 	: mich auch noch mit der Strukturierung und Handhabung des Makefiles
@@ -310,62 +290,99 @@ Fazit nach dem ersten Sprint, 29. Mai
 	: implementieren konnte und das Testing positiv verlief. Die Implementierung
 	: des DS musste ich auf den nächsten Sprint verschieben.
 	Tasks
-		[X] Umgebung einrichten
-			2 h
-		[X] Neue shm Datei kreieren
-			2 h
-		[X] Datei löschen
-			1 h
-		[X] Datei aktualisieren
-			1 h
-		[X] Datei lesen
-			1 h
-		[_] Datei im DS kreieren
-			3 h
-		[_] Datei im DS löschen
-			1 h
-		[_] DS: Liste mit aktuellen Dateien ausgeben
-			1 h
-		[_] Dateien im DS suchen
-			1 h
-Background info
-	Shared Mem. Model
-		- each process splits its virtual mem into pages
-		- each process maintains a mapping from its mem address to these pages
-			: (they contain the real data)
-		- Even though each process has its own address, many process mapping might point to the same page
-		- Wie gross ist eine Page?
-			: getpagesize()
-		- Wie gross ist der allozierte Bereich?
-- Tasks 
-New thoughts
-	Grund Funktionen
-		Neue shm Datei kreieren
-		stdin lesen und Befehle interpretieren
-		Dateiname in DS finden
-			int index = find_file(int startindex, char *name);
-				- startindex
-					: Ab welchem index soll gesucht werden?
-				- name
-					: Wie heisst die Datei? Falls man einfach den Index des nächsten
-					: Eintrag erhalten möchte (für die LIST Funktion) übergibt man
-					: "\next". Falls man den Index des nächsten leeren Eintrags finden
-					: möchte übergibt man "\empty". 
-				- Return
-					a Falls fündig
-						: Index der Fundstelle wird zurückgegeben.
-					b Falls nicht fündig
-						: Index = 255 wird zurückgegeben
-		Liste ausgeben
-		Inhalt einer shm Datei ausgeben
-		Vorhandene shm Datei aktualisieren
-		Eingabe Datei lesen
-			Befehl lesen
-				struct cmd *getcmd()
-					- getline
-					- Befehl interpretieren und eventuell Argumente aufsplitten
-					- Speicher für cmd Strukt allozieren.
-					- Befehlname und Argumente dem struct zuweisen
-					- ptr to cmd struct zurückgeben
-			Ihnalt einer Datei lesen
-				read() bis nichts mehr kommt.
+		[X] 2h Umgebung einrichten
+			- Hilfsfunktionen für die Fehlerbehandlung einbauen
+			- Makefile
+			- git
+		[X] 2h Neue shm Datei kreieren
+		[X] 1h Datei löschen
+		[X] 1h Datei aktualisieren
+		[_] 1h Datei im DS kreieren
+		[_] 1h Datei im DS löschen
+Fazit nach dem zweiten Sprint, 31. Mai
+	: Die Implementierung des DS ging im Grossen und Ganzen problemlos von
+	: statten. Nach dem das Programm DS Einträge kreieren konnte, war es sogar sehr
+	: einfach, die weiteren Funktionen daraus abzuleiten. Der DS war dann
+	: insgesamt auch schneller implementiert als geschätzt.
+	;
+	: Mehr Probleme bereitete das Lesen der Datei mit den Befehlen und vor allem
+	: die Unterteilung der Zeile in den Befehl und die Parameter. Diese Probleme
+	: konnte aber im Zeitrahmen bewältigt werden.
+	; 
+	: Nach der Anwendung der zweiten Testdatei (den ganzen Tag habe ich nur mir
+	: der ersten Datei getestet) kam dann die Ernüchterung. Die Ausgabe zeigte
+	: zum Teil völlig falsche Dateinamen und -inhalte. Da musste also ein
+	: Pointer verrutscht sein. Ich ging den Code nochmals durch, jedoch schien
+	: alles korrekt implementiert. Ich ging den Code ein zweites Mal durch,
+	: aber ohne fündig zu werden. Als ich anfing an einen Bug bei den POSIX
+	: Semaphoren zu glauben, kam dann doch noch die Erleuchtung. Ich habe mir
+	: angewöhnt, die Strings in einem Puffer mit einem '\00' zu beenden. An
+	: einer Stelle habe ich für die Erkennung der Endung eines Char-Arrays nach
+	: einem '\0' gesucht. Eigentlich dachte ich, beide Ausdrücke hätten die selbe
+	: Bedeutung. Aber na gut, wieder was gelernt. 
+	; 
+	: Nur war auch schon längst der Abend eingebrochen und ich war erschöpft.
+	: Den Output von Antworten liess ich in den stdout schreiben statt wie
+	: ursprünglich geplant in eine Datei. Den Rest der nicht erledigten Tasks
+	: musste ich auf den nächsten Tag verschieben, was die Pendenzenliste noch
+	: länger werden liess. Nun war auch absehbar, dass ich nicht alle Tasks in
+	: dem Zeitrahmen, den ich mir gesteckt habe, implementieren konnte. 
+	; 
+	: Ich beschloss schweren Herzens zuerst den File Server an sich (ohne TCP
+	: Socket) und die Doku fertig zu schreiben. Den Rest musste ich wohl oder
+	: über auf einen späteren, noch nicht definierten Zeitpunkt verschieben.
+	Tasks
+		[X] 1h Datei im DS kreieren
+		[X] 1h Datei im DS löschen
+		[X] 1h DS: Liste mit aktuellen Dateien ausgeben
+		[X] 1h Dateien im DS suchen
+		[X] 2h Input von Befehlen per Datei 
+		[/] 2h Output von Antworten 
+			- writes to stdout
+Fazit nach dem dritten Sprint, 1. Juni
+	: Als erstes setzte ich die bisher programmierten Einzelteile ( Shared
+	: Memory verwalten, DS verwalten und Befehle von einer Datei lesen ) zum
+	: einem Programm zusammen. Dies ging schnell und zügig voran. Nach
+	: zwei Stunden konnte ich die Doku angehen. Die Doku konnte fast, jedoch
+	: nicht ganz fertig gestellt werden. 
+	Tasks
+		[X] 2h Life cycle Input, Process, Output funktioniert mit Ein- und Ausgabedatei 
+		[X] 4h Doku schreiben 
+		[_] 1h Semaphore implementieren
+Fazit für das ganze Projekt
+	: Es hat sich gezeigt, dass es extrem schwierig ist, den Aufwand für Tasks
+	: zu schätzen, wenn der Entwickler in einer ihm wenig geläufigen Sprache
+	: programmiert. Zwar ist bekannt, dass C viel Handarbeit erfordert und z.B.
+	: das exakte Auseinandernehmen eines Strings für ungeübte Anwender viel Zeit
+	: in Anspruch nehmen kann. Aber es ist schwierig sich daran zu gewöhnen und
+	: die besonders Zeit fressenden Probleme kommen immer wieder überraschend
+	: aus dem Hinterhalt. 
+	; 
+	: Ich habe sehr viel Zeit dafür aufgewendet, die logische Funktionsweise des
+	: Programms bereits vor der Programmierung zu studieren. Ein guter Plan wäre
+	: bei einer höheren Sprache, mit der man Erfahrung hat, mehr als die halbe
+	: Miete. Bei diesem Projekt habe ich am Schluss aber doch mehr Zeit mit dem
+	: Spalten von Strings, setzen von Pointern und studieren von Char-Arrays
+	: verbracht, als mit der logischen Funktionsweise des Programmes.
+	:
+	: Trotzdem gefällt mir C sehr gut. Besonders gefällt mir, dass alle Befehle
+	: in den Man Pages erklärt sind. So ist man gar nicht auf das Internet
+	: angewiesen und kann auch in totaler Isolation programmieren.
+	;
+	: Summa summarum fällt das Fazit für die Arbeit äusserst positiv aus. Sie war
+	: interessant und hat mehrheitlich Spass gemacht. Der grösste Wermutstropfen
+	: ist, dass ich nicht alle erforderlichen Task erledigen konnte. Sie seien
+	: unten nochmals aufgelistet. Bestimmt werde ich den einen oder anderen in
+	: den nächsten 2,3 Wochen vor der Abgabe noch bewältigen können. Sie werden
+	: dann mit einem 'X' gekennzeichnet werden. 
+	Noch nicht implementierte Tasks ( 1. Juni )
+		[_] getcmd Funktoin nochmals anschauen
+			: Werden wirklich alle allozierten Speicherbereiche wieder befreit?
+		[_] Funktion munmap() anschauen
+			: Wirklich nötig für shared Memory? -> JA
+		[_] 1h Semaphore implementieren
+		[_] 2h Client kann Server stoppen
+		[_] 1h Client kann Shared Memory räumen
+		[_] 1h Client kann Shared Memory aufsetzen
+		[_] 3h TCP Server einbauen
+		[_] 2h TCP Client programmieren
