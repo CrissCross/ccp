@@ -9,6 +9,7 @@
 #include <fserver_io.h>
 #include <helpers.h>
 
+#define MAX_CYCLE 10
 int clean_mem(struct cmd_info *cinfo);
 int print_curr_files()
 {
@@ -45,19 +46,22 @@ int main (int argc, char **argv)
   retcode = f_sv_setup_shm();
   handle_my_error(retcode, "Couldnt set up shm for file supervisor", PROCESS_EXIT);
 
-  int max_cycle = 10;
   int cyc_count = 0;
   while (1)
   { // break if max_cycle reached
-    printf("Cycle count: round %d\n", cyc_count-1);
-    if(cyc_count > max_cycle) break;
+    if(cyc_count >= MAX_CYCLE)
+    { 
+      break;
+    }
     cyc_count++;
+    printf("\nCycle count: round %d\n", cyc_count);
 
     struct cmd_info *cmd = get_cmd();
     if ( cmd == NULL )
     {
-      printf("Error while getting command.\n\n");
-      continue;
+      printf("Error while getting command.\n");
+      printf("Review the command file and try again...\n");
+      break;
     }
 
     printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
@@ -90,7 +94,13 @@ int main (int argc, char **argv)
 
       case DELETE:
         printf("DELETE\n");
+        retcode = f_sv_del(cmd->fname);
         delete_shm_f(cmd->fname);
+        break;
+
+      case STOP:
+        printf("STOP\n");
+        cyc_count = MAX_CYCLE;
         break;
 
       default:

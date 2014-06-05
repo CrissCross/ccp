@@ -10,8 +10,8 @@
 
 // max length of one command line
 #define CMD_LINE_LEN 200
-// max cmds taken from an input file
-#define CMDS_PER_FILE 15
+// max lines taken from an input file
+#define MAX_LINES_READ_PER_FILE 15
 
 
 
@@ -32,22 +32,21 @@ struct cmd_info *get_cmd()
   int i = 0;
   printf("Reading lines:\n");
 
-  while( i < CMDS_PER_FILE )
-  { // read max 15 commands
+  while( i < MAX_LINES_READ_PER_FILE )
+  { // read max 15 lines
     read = getline(&cmd_line, &len, stdin);
     if(handle_my_error(read, "Error reading input", NO_EXIT) == -1)
-      return NULL;
+    {
+      //cinfo == NULL;
+      break;
+      //return NULL;
+    }
 
     if (read == 0)
     {
       printf("File is empty\n\n");
-      return NULL;
-    }
-    else if (strncmp(cmd_line,"STOP",4) == 0)
-    {
-      printf("%d\tSTOPP\n", i);
-      i++;
       break;
+      //return NULL;
     }
     else if (strcmp(cmd_line,"\n") == 0)
     {
@@ -57,19 +56,13 @@ struct cmd_info *get_cmd()
     }
     if (read > 0 && read < CMD_LINE_LEN)
     {
-      // allocate mem for cmd struct
-      cinfo = (struct cmd_info *) malloc(sizeof(struct cmd_info));
-      
-      // Content comes later
-      cinfo->content = NULL;
       printf("%d\tread %d chars: %s", i, (int) read, cmd_line);
 
       // Check if the command ends with \n
       if ( strncmp( &cmd_line[read-3], "\\n", 2) != 0)
       { 
         printf("Command line must be terminated with '\\n' which is not the case.\n");
-        free(cinfo);
-        return NULL;
+        break;
       }
 
 
@@ -89,7 +82,6 @@ struct cmd_info *get_cmd()
       // Let's see if there are parameters:
       char *cmd_snip = strsep(&tempbuf, " ");
 
-      //
       printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
 
       // Check if command is Uppercase if not, break
@@ -97,9 +89,14 @@ struct cmd_info *get_cmd()
       {
         printf("Unknown command\n");
         free(free_tempbuf);
-        free(cinfo);
-        return NULL;
+        break;
       }
+
+      // cmd seems to be valid. allocate mem for cmd struct
+      cinfo = (struct cmd_info *) malloc(sizeof(struct cmd_info));
+      
+      // Content comes later
+      cinfo->content = NULL;
 
 
       if (strcmp(cmd_snip, "LIST") == 0)
@@ -117,10 +114,9 @@ struct cmd_info *get_cmd()
         if ( ret < 0 )
         { // getargs failed
           handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
-          return NULL;
+          free(cinfo);
+          cinfo = NULL;
         }
-        
-
       }
       else if (strcmp(cmd_snip, "READ") == 0)
       { // READ, 1 argument
@@ -130,10 +126,9 @@ struct cmd_info *get_cmd()
         if ( ret < 0 )
         { // getargs failed
           handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
-          return NULL;
+          free(cinfo);
+          cinfo = NULL;
         }
-        
-
       }
       else if (strcmp(cmd_snip, "UPDATE") == 0)
       { // UPDATE, 2 arguments
@@ -144,10 +139,9 @@ struct cmd_info *get_cmd()
         if ( ret < 0 )
         { // getargs failed
           handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
-          return NULL;
+          free(cinfo);
+          cinfo = NULL;
         }
-        
-
       }
       else if (strcmp(cmd_snip, "DELETE") == 0)
       { // DELETE, 1 argumnet
@@ -158,20 +152,23 @@ struct cmd_info *get_cmd()
         if ( ret < 0 )
         { // getargs failed
           handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
-          return NULL;
+          free(cinfo);
+          cinfo = NULL;
         }
-        
-
+      }
+      else if (strcmp(cmd_snip, "STOP") == 0)
+      { // DELETE, 1 argumnet
+        cinfo->cmd = STOP;
+        cinfo->fname = NULL;
+        cinfo->content_len = 0;
       }
       else
-      {
+      { // non of the known commands
         handle_my_error(-1, "Unknown command", NO_EXIT);
         free(cinfo);
-        free(free_tempbuf);
-        return NULL;
+        cinfo = NULL;
       }
 
-      // cpy and replace last char with '\00'
       free(free_tempbuf);
       break;
     }

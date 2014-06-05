@@ -376,10 +376,11 @@ Fazit für das ganze Projekt
 	: den nächsten 2,3 Wochen vor der Abgabe noch bewältigen können. Sie werden
 	: dann mit einem 'X' gekennzeichnet werden. 
 	Noch nicht implementierte Tasks ( 1. Juni )
-		[_] getcmd Funktoin nochmals anschauen
+		[X] getcmd Funktoin nochmals anschauen
 			: Werden wirklich alle allozierten Speicherbereiche wieder befreit?
 		[_] Funktion munmap() anschauen
 			: Wirklich nötig für shared Memory? -> JA
+		[_] print answers to buffer
 		[_] 1h Semaphore implementieren
 		[_] 2h Client kann Server stoppen
 		[_] 1h Client kann Shared Memory räumen

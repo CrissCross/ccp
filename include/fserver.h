@@ -3,7 +3,7 @@
 #define F_MAX_LEN 100 // max length of a file name
 #define MAX_CONTENT 1000 // max length of file content
 
-enum cmds { LIST, CREATE, READ, UPDATE, DELETE };
+enum cmds { LIST, CREATE, READ, UPDATE, DELETE, STOP };
 
 struct file_supervisor
 {
