@@ -7,8 +7,8 @@ CFLAGS = -Wall -g -O2 -std=gnu99 -I include -lrt -lbsd
 
 objects = server_ctrl.o fserver_io.o f_supervisor.o shm_f_action.o error_handler.o
 
-fserver : $(objects)
-	cc $(CFLAGS) -o fserver $(objects)
+fserver_app : $(objects)
+	cc $(CFLAGS) -o fserver_app $(objects)
 
 server_ctrl.o : fserver/server_ctrl.c
 	cc $(CFLAGS) -c fserver/server_ctrl.c 
