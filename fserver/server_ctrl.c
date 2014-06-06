@@ -67,37 +67,43 @@ int main (int argc, char **argv)
     }
 
     printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
-    char *shm_content;
+    //char *shm_content;
+    char *buf;
     switch ( cmd->cmd )
     { // LIST, CREATE, READ, UPDATE, DELETE, STOP
       case LIST:
         printf("LIST\n");
-        print_curr_files();
+        buf = prnt_ans(cmd, 0);
+        printf("%s\n", buf);
         break;
 
       case CREATE:
         printf("CREATE\n");
         retcode = f_sv_add(cmd->fname);
         create_shm_f(cmd->fname, "place holder");
+        buf = prnt_ans(cmd, 1);
+        printf("%s\n", buf);
         break;
 
       case READ:
         printf("READ\n");
-        shm_content = get_shm_f(cmd->fname);
-        printf("read  content:\n%s\n\n", shm_content);
+        buf = prnt_ans(cmd, 1);
+        printf("%s\n", buf);
         break;
 
       case UPDATE:
         printf("UPDATE\n");
         update_shm_f(cmd->fname, "Updated place holder");
-        shm_content = get_shm_f(cmd->fname);
-        printf("read new content:\n%s\n\n", shm_content);
+        buf = prnt_ans(cmd, 1);
+        printf("%s\n", buf);
         break;
 
       case DELETE:
         printf("DELETE\n");
         retcode = f_sv_del(cmd->fname);
         delete_shm_f(cmd->fname);
+        buf = prnt_ans(cmd, 1);
+        printf("%s\n", buf);
         break;
 
       case STOP:
