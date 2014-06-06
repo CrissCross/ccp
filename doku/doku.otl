@@ -381,7 +381,7 @@ Fazit für das ganze Projekt
 		[_] Funktion munmap() anschauen
 			: Wirklich nötig für shared Memory? -> JA
 		[_] print answers to buffer
-		[_] 1h Semaphore implementieren
+		[X] 1h Semaphore implementieren
 		[_] 2h Client kann Server stoppen
 		[_] 1h Client kann Shared Memory räumen
 		[_] 1h Client kann Shared Memory aufsetzen

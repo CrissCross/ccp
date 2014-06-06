@@ -21,16 +21,18 @@ int print_curr_files()
   }
   
   printf("We have %d files:\n", superv->count);
-  for (int i=0; i < superv->count; i++) 
-  { 
+  int i = 0;
+  while (1)
+  { //breaks if end of list reached 
 
     if (strncmp(superv->files[i], "/END", 4) == 0)
       break;
 
     if ( superv->files[i][0] != '\00' )
     {
-      printf("%d \t %s\n", superv->count, superv->files[i]);
+      printf("%d \t %s\n", i, superv->files[i]);
     }
+    i++;
 
   }
   printf("\n");

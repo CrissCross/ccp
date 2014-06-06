@@ -1,15 +1,13 @@
+CREATE a 6\n
+CREATE ab 6\n
 CREATE abc 6\n
-
-UPDATE abc 3\n
-
+CREATE abcd 6\n
+CREATE abcde 6\n
+CREATE abcdef 6\n
 LIST\n
-
-CREATE aaaabc 6\n
-
+DELETE abcde\n
 LIST\n
-
-DELETE abc\n
-
-LIST\n
-
 STOP\n
+
+LIST\n
+
