@@ -69,7 +69,7 @@ int main (int argc, char **argv)
     printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
     char *shm_content;
     switch ( cmd->cmd )
-    { // LIST, CREATE, READ, UPDATE, DELETE
+    { // LIST, CREATE, READ, UPDATE, DELETE, STOP
       case LIST:
         printf("LIST\n");
         print_curr_files();

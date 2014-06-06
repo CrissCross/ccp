@@ -10,9 +10,6 @@ doc.run.xml
 *.html
 *.pdf
 
-# libs
-lib/libhelpers.a
-
 # taskjuggler
 tj/tjOutput
 
@@ -24,3 +21,6 @@ tj/tjOutput
 
 # c tags file
 tags
+
+# executable
+fserver_app

@@ -7,20 +7,22 @@
 
 #include <helpers.h>
 #include <fserver.h>
+#include <f_supervisor.h>
 
 // max length of one command line
 #define CMD_LINE_LEN 200
 // max lines taken from an input file
 #define MAX_LINES_READ_PER_FILE 15
-
-
-
+// Length of buffer that hold the answer
+#define MAX_ANSW_LEN 3000
 
 int valid_cmd (char *str);
 
 int valid_fname(char *str);
 
 int get_args (char *cmd_snip, int args_needed, struct cmd_info *cargs);
+
+int prnt_list();
 
 struct cmd_info *get_cmd()
 {
@@ -274,6 +276,69 @@ int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
   return 0;
 }
 
+char *prnt_ans (struct cmd_info *cinfo, int success)
+{ // prints answer to buffer
+  int retcode;
+  char *buf = NULL;
+  switch ( cinfo->cmd )
+  { // LIST, CREATE, READ, UPDATE, DELETE
+      case LIST:
+        retcode = prnt_list(buf);
+        handle_my_error(retcode, "Error Listing file", NO_EXIT);
+        break;
+      case CREATE:
+        if(success)
+        { // 
+          char *tempbuf = "FILECREATED\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        else
+        {
+          char *tempbuf = "FILEEXISTS\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        break;
+      case READ:
+        break;
+      case UPDATE:
+        if(success)
+        { // 
+          char *tempbuf = "UPDATED\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        else
+        {
+          char *tempbuf = "NOSUCHFILE\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        break;
+      case DELETE:
+        if(success)
+        { // 
+          char *tempbuf = "DELETED\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        else
+        {
+          char *tempbuf = "NOSUCHFILE\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        break;
+      case STOP:
+        break;
+      default:
+        break;
+  }
+
+  return buf;
+}
+
 int valid_cmd (char *str)
 { // validate a command (Uppercase letter, not longer than "UPDATE")
   int str_len = strlen(str);
@@ -291,7 +356,7 @@ int valid_cmd (char *str)
   {
     if ( isalpha(str[i]) == 0 || isupper(str[i] == 0) )
     {
-      handle_my_error(-1, "Command is not uppercase", NO_EXIT);
+      handle_my_error(-1, "Command is not uppercasealphabetic", NO_EXIT);
       return 0;
     }
   }
@@ -324,3 +389,47 @@ int valid_fname(char *str)
   return 1;
 }
 
+int prnt_list(char *buf)
+{
+  struct file_supervisor *superv = f_sv_getlist();
+  if (superv->count == 0)
+  {
+    char *tempbuf = "There are no files at the moment.\\n";
+    buf = calloc(strlen(tempbuf), sizeof(char));
+    sprintf(buf, tempbuf);
+    return 0;
+  }
+  
+  int cur_pos;
+  int bytes_written;
+  int bytes_left;
+
+  buf = calloc(MAX_ANSW_LEN, sizeof(char));
+  cur_pos = snprintf(buf, MAX_ANSW_LEN, "We have %d files:\n", superv->count);
+  // sNprintf writes a '\0' char behind last char!!
+  cur_pos--;
+  bytes_left = MAX_ANSW_LEN - cur_pos;
+  int i = 0;
+  while (1)
+  { //breaks if end of list reached 
+
+    if (strncmp(superv->files[i], "/END", 4) == 0)
+      break;
+
+    if ( superv->files[i][0] != '\00' )
+    {
+      bytes_written = snprintf(&buf[cur_pos], bytes_left, "%d \t %s\n", i, superv->files[i]);
+      if (bytes_written >= bytes_left)
+      { // buffer is full, input string was truncated!
+        handle_my_error(-1, "print file list to buffer: buffer full", NO_EXIT);
+        break;
+      }
+      cur_pos = cur_pos + bytes_written - 1;
+      bytes_left = MAX_ANSW_LEN - cur_pos;
+    }
+    i++;
+
+  }
+  buf = realloc(buf, cur_pos +1);
+  return 0;
+}
