@@ -8,6 +8,7 @@
 #include <helpers.h>
 #include <fserver.h>
 #include <f_supervisor.h>
+#include <shm_f_action.h>
 
 // max length of one command line
 #define CMD_LINE_LEN 200
@@ -22,7 +23,7 @@ int valid_fname(char *str);
 
 int get_args (char *cmd_snip, int args_needed, struct cmd_info *cargs);
 
-int prnt_list();
+char *prnt_list();
 
 struct cmd_info *get_cmd()
 {
@@ -278,13 +279,12 @@ int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
 
 char *prnt_ans (struct cmd_info *cinfo, int success)
 { // prints answer to buffer
-  int retcode;
   char *buf = NULL;
   switch ( cinfo->cmd )
   { // LIST, CREATE, READ, UPDATE, DELETE
       case LIST:
-        retcode = prnt_list(buf);
-        handle_my_error(retcode, "Error Listing file", NO_EXIT);
+        buf = prnt_list();
+        if (buf == NULL) handle_my_error(-1, "Error Writng file to buffer", NO_EXIT);
         break;
       case CREATE:
         if(success)
@@ -301,6 +301,19 @@ char *prnt_ans (struct cmd_info *cinfo, int success)
         }
         break;
       case READ:
+        if(success)
+        { // 
+          buf = calloc(MAX_ANSW_LEN, sizeof(char));
+          snprintf(buf, MAX_ANSW_LEN, "FILECONTENT %s %d\n%s", cinfo->fname, cinfo->content_len, get_shm_f(cinfo->fname));
+          buf = realloc(buf, strlen(buf)); 
+        }
+        else
+        {
+          char *tempbuf = "NOSUCHFILE\\n";
+          buf = calloc(strlen(tempbuf), sizeof(char));
+          sprintf(buf, tempbuf);
+        }
+        break;
         break;
       case UPDATE:
         if(success)
@@ -389,8 +402,9 @@ int valid_fname(char *str)
   return 1;
 }
 
-int prnt_list(char *buf)
-{
+char *prnt_list()
+{ // print list to buffer and return it
+  char *buf = NULL;
   struct file_supervisor *superv = f_sv_getlist();
   if (superv->count == 0)
   {
@@ -407,29 +421,31 @@ int prnt_list(char *buf)
   buf = calloc(MAX_ANSW_LEN, sizeof(char));
   cur_pos = snprintf(buf, MAX_ANSW_LEN, "We have %d files:\n", superv->count);
   // sNprintf writes a '\0' char behind last char!!
-  cur_pos--;
+  //cur_pos--;
   bytes_left = MAX_ANSW_LEN - cur_pos;
   int i = 0;
+  int files_found = 0;
   while (1)
   { //breaks if end of list reached 
 
-    if (strncmp(superv->files[i], "/END", 4) == 0)
+    if (strncmp(superv->files[i], "/END", 4) == 0 || files_found >= superv->count)
       break;
 
     if ( superv->files[i][0] != '\00' )
     {
+      files_found++;
       bytes_written = snprintf(&buf[cur_pos], bytes_left, "%d \t %s\n", i, superv->files[i]);
       if (bytes_written >= bytes_left)
       { // buffer is full, input string was truncated!
         handle_my_error(-1, "print file list to buffer: buffer full", NO_EXIT);
         break;
       }
-      cur_pos = cur_pos + bytes_written - 1;
+      cur_pos = cur_pos + bytes_written;
       bytes_left = MAX_ANSW_LEN - cur_pos;
     }
     i++;
 
   }
   buf = realloc(buf, cur_pos +1);
-  return 0;
+  return buf;
 }

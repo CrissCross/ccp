@@ -378,10 +378,11 @@ Fazit für das ganze Projekt
 	Noch nicht implementierte Tasks ( 1. Juni )
 		[X] getcmd Funktoin nochmals anschauen
 			: Werden wirklich alle allozierten Speicherbereiche wieder befreit?
-		[_] Funktion munmap() anschauen
+		[X] Funktion munmap() anschauen
 			: Wirklich nötig für shared Memory? -> JA
-		[_] print answers to buffer
-		[X] 1h Semaphore implementieren
+		[X] print answers to buffer
+		[_] 1h Semaphore implementieren
+		[_] file content: replace place holder with real input
 		[_] 2h Client kann Server stoppen
 		[_] 1h Client kann Shared Memory räumen
 		[_] 1h Client kann Shared Memory aufsetzen
