@@ -24,3 +24,6 @@ tags
 
 # executable
 fserver_app
+
+# fserver output file
+output
