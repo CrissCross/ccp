@@ -7,8 +7,6 @@
 
 #include <helpers.h>
 #include <fserver.h>
-#include <f_supervisor.h>
-#include <shm_f_action.h>
 
 // max length of one command line
 #define CMD_LINE_LEN 200
@@ -33,7 +31,7 @@ struct cmd_info *get_cmd()
   struct cmd_info *cinfo = NULL;
 
   int i = 0;
-  printf("Reading lines:\n");
+  if (DEBUG_LEVEL > 1) printf("Reading lines:\n");
 
   while( i < MAX_LINES_READ_PER_FILE )
   { // read max 15 lines
@@ -47,24 +45,24 @@ struct cmd_info *get_cmd()
 
     if (read == 0)
     {
-      printf("File is empty\n\n");
+      if (DEBUG_LEVEL > 1) printf("File is empty\n\n");
       break;
       //return NULL;
     }
     else if (strcmp(cmd_line,"\n") == 0)
     {
-      printf("%d\tempty line\n", i);
+      if (DEBUG_LEVEL > 1) printf("%d\tempty line\n", i);
       i++;
       continue;
     }
     if (read > 0 && read < CMD_LINE_LEN)
     {
-      printf("%d\tread %d chars: %s", i, (int) read, cmd_line);
+      if (DEBUG_LEVEL > 1) printf("%d\tread %d chars: %s", i, (int) read, cmd_line);
 
       // Check if the command ends with \n
       if ( strncmp( &cmd_line[read-3], "\\n", 2) != 0)
       { 
-        printf("Command line must be terminated with '\\n' which is not the case.\n");
+        if (DEBUG_LEVEL > 1) printf("Command line must be terminated with '\\n' which is not the case.\n");
         break;
       }
 
@@ -85,12 +83,12 @@ struct cmd_info *get_cmd()
       // Let's see if there are parameters:
       char *cmd_snip = strsep(&tempbuf, " ");
 
-      printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
+      if (DEBUG_LEVEL > 1) printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
 
       // Check if command is Uppercase if not, break
       if ( valid_cmd(cmd_snip) == 0 )
       {
-        printf("Unknown command\n");
+        if (DEBUG_LEVEL > 1) printf("Unknown command\n");
         free(free_tempbuf);
         break;
       }
@@ -178,46 +176,16 @@ struct cmd_info *get_cmd()
 
   }
   
-  printf("\n");
+  if (DEBUG_LEVEL > 1) printf("\n");
   free(cmd_line);
 
   return cinfo;
 
 };
 
-int print_f_asread ()
-{
-  char *cmd_line = NULL;
-  size_t len = 0;
-  ssize_t read;
-
-  int i = 0;
-  while(i<15)
-  {
-    
-    read = getline(&cmd_line, &len, stdin);
-
-    if (read > 0 && read < CMD_LINE_LEN)
-    {
-      if(strcmp(cmd_line,"\n") == 0)
-        printf("%d\t\n",i);
-      else
-        printf("%d\t%s",i, cmd_line);
-    }
-    else 
-      printf("%i\tNothing was read\n",i);
-
-    i++;
-  }
-  
-  free(cmd_line);
-  return 0;
-
-};
-
 int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
 {
-  printf("Show snippet: %s\n", cmd_snip);
+  if (DEBUG_LEVEL > 1) printf("Show snippet: %s\n", cmd_snip);
   // create tempbuf for parameter seperation process
   char *tempbuf = strdup(cmd_snip);
   // pointer to start of char array to free allocated memory when finished
@@ -304,9 +272,12 @@ char *prnt_ans (struct cmd_info *cinfo, int success)
         if(success)
         { // 
           buf = calloc(MAX_ANSW_LEN, sizeof(char));
+
           char *content = get_shm_f(cinfo->fname);
+          if ( content == NULL) break;
+
           int content_len = strlen(content);
-          snprintf(buf, MAX_ANSW_LEN, "FILECONTENT %s %d\n%s", cinfo->fname, content_len, content);
+          snprintf(buf, MAX_ANSW_LEN, "FILECONTENT %s %d\n%s\n", cinfo->fname, content_len, content);
           buf = realloc(buf, strlen(buf)); 
         }
         else
@@ -315,7 +286,6 @@ char *prnt_ans (struct cmd_info *cinfo, int success)
           buf = calloc(strlen(tempbuf), sizeof(char));
           sprintf(buf, tempbuf);
         }
-        break;
         break;
       case UPDATE:
         if(success)
@@ -421,7 +391,7 @@ char *prnt_list()
   int bytes_left;
 
   buf = calloc(MAX_ANSW_LEN, sizeof(char));
-  cur_pos = snprintf(buf, MAX_ANSW_LEN, "We have %d files:\n", superv->count);
+  cur_pos = snprintf(buf, MAX_ANSW_LEN, "ACK %d\n", superv->count);
   // sNprintf writes a '\0' char behind last char!!
   //cur_pos--;
   bytes_left = MAX_ANSW_LEN - cur_pos;
@@ -431,7 +401,10 @@ char *prnt_list()
   { //breaks if end of list reached 
 
     if (strncmp(superv->files[i], "/END", 4) == 0 || files_found >= superv->count)
+    {
+      if ( DEBUG_LEVEL > 1 ) printf("this file: %s, next file: %s\n", superv->files[i], superv->files[i+1]); 
       break;
+    }
 
     if ( superv->files[i][0] != '\00' )
     {

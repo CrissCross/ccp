@@ -8,6 +8,7 @@
 #include <errno.h>
 
 #include<helpers.h>
+#include<fserver.h>
 
 int create_shm_f(char *fname, char *fcontent)
 {
@@ -17,7 +18,7 @@ int create_shm_f(char *fname, char *fcontent)
   // shared memory name needs a extra slash in front
   char shm_fname[strlen(fname) + 1];
   sprintf(shm_fname, "/%s", fname);
-  printf("Create a file: %s\n",shm_fname );
+  if (DEBUG_LEVEL > 1) printf("Create a file: %s\n",shm_fname );
   //
   // size of content to save in shm
   int fcontent_size = strlen(fcontent)*sizeof(char);
@@ -51,7 +52,7 @@ int create_shm_f(char *fname, char *fcontent)
 
   strcpy(shm_fcontent, fcontent);
 
-  printf("New shared memory file %s with the following content is born:\n%s\n", shm_fname, shm_fcontent);
+  if (DEBUG_LEVEL > 1) printf("New shared memory file %s with the following content is born:\n%s\n", shm_fname, shm_fcontent);
   ///shm_unlink("/greeting");
   //printf("shm_unlinked:\n");
   return 0;
@@ -65,17 +66,17 @@ int update_shm_f(char *fname, char *fcontent)
   // shared memory name needs a extra slash in front
   char shm_fname[strlen(fname) + 1];
   sprintf(shm_fname, "/%s", fname);
-  printf("Update file: %s\n",shm_fname );
+  if (DEBUG_LEVEL > 1) printf("Update file: %s\n",shm_fname );
   //
   // size of content to save in shm
-  printf("Before content size\n" );
+  if (DEBUG_LEVEL > 1) printf("Before content size\n" );
   int fcontent_size = strlen(fcontent)*sizeof(char);
 
 
   // create new shm segment, return error if already there
-  printf("Before open\n" );
+  if (DEBUG_LEVEL > 1) printf("Before open\n" );
   fd = shm_open(shm_fname, O_RDWR, S_IRUSR | S_IWUSR);
-  printf("After open\n" );
+  if (DEBUG_LEVEL > 1) printf("After open\n" );
   if(handle_error(fd, "Could not open shm", NO_EXIT) == -1)
   {
     return -1;
@@ -102,7 +103,7 @@ int update_shm_f(char *fname, char *fcontent)
 
   strcpy(shm_fcontent, fcontent);
 
-  printf("New shared memory file %s updated.\n", shm_fname);
+  if (DEBUG_LEVEL > 1) printf("New shared memory file %s updated.\n", shm_fname);
   ///shm_unlink("/greeting");
   //printf("shm_unlinked:\n");
   return 0;
@@ -118,7 +119,7 @@ char *get_shm_f (char *fname)
   // shared memory name needs a extra slash in front
   char shm_fname[strlen(fname) + 1];
   sprintf(shm_fname, "/%s", fname);
-  printf("Read file: %s\n",shm_fname );
+  if (DEBUG_LEVEL > 1) printf("Read file: %s\n",shm_fname );
 
   // get shm file descriptor by name
   int fd = shm_open(shm_fname, O_RDWR, 0);
@@ -135,7 +136,7 @@ char *get_shm_f (char *fname)
     return NULL;
   }
 
-  printf("fstat report size: %d\n", (int) buf.st_size);
+  if (DEBUG_LEVEL > 1) printf("fstat report size: %d\n", (int) buf.st_size);
 
   char *shm_fcontent = mmap(0, buf.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if (shm_fcontent == MAP_FAILED)
@@ -156,7 +157,7 @@ int delete_shm_f(char *fname)
   // shared memory name needs a extra slash in front
   char shm_fname[strlen(fname) + 1];
   sprintf(shm_fname, "/%s", fname);
-  printf("Delete file: %s\n",shm_fname );
+  if (DEBUG_LEVEL > 1) printf("Delete file: %s\n",shm_fname );
 
   // get shm file descriptor by name
   int fd = shm_open(shm_fname, O_RDWR, 0);

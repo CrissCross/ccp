@@ -19,7 +19,7 @@ int f_sv_dupl_check(char *fname)
   int fname_len = strlen(fname);
   struct file_supervisor *superv;
 
-  printf("File supervisor checks if file %s already exists.\n", fname );
+  if (DEBUG_LEVEL > 1) printf("File supervisor checks if file %s already exists.\n", fname );
 
   // get shm segment with the file supervisor
   fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
@@ -43,7 +43,7 @@ int f_sv_dupl_check(char *fname)
     // check if we are inbound
     if( i >= F_LIMIT )
     {
-      printf("f_sv_dupl_check: %s not found.\n", fname);
+      handle_my_error(-1, "f_sv_dupl_check: file not found.", NO_EXIT);
       return -1;
     }
 
@@ -65,7 +65,7 @@ int f_sv_clean_shm()
   // shared memory name needs a extra slash in front
   char shm_fname[strlen(superv_name) + 1];
   sprintf(shm_fname, "/%s", superv_name);
-  printf("Delete shared memory for the file supervisor %s\n",shm_fname );
+  if (DEBUG_LEVEL > 1) printf("Delete shared memory for the file supervisor %s\n",shm_fname );
 
   retcode = shm_unlink(shm_fname);
 
@@ -116,7 +116,7 @@ int f_sv_setup_shm()
   // set count to 0
   superv->count = 0;
 
-  printf("Created new shared memory segment %s for the file supervisor.\n\n", shm_fname);
+  if (DEBUG_LEVEL > 1) printf("Created new shared memory segment %s for the file supervisor.\n\n", shm_fname);
 
   return 0;
 }
@@ -128,7 +128,7 @@ int f_sv_add(char *fname)
   struct file_supervisor *superv;
 
   // shared memory name needs a extra slash in front
-  printf("File supervisor adds file: %s\n",fname );
+  if (DEBUG_LEVEL > 1) printf("File supervisor adds file: %s\n",fname );
   //
 
   // create new shm segment, return error if already there
@@ -150,7 +150,7 @@ int f_sv_add(char *fname)
     // check if we are inbound
     if( i >= F_LIMIT )
     {
-      printf("Memory full.\n");
+      handle_my_error(-1, "f_fs_add: Memory full.", NO_EXIT);
       return -1;
     }
 
@@ -164,11 +164,11 @@ int f_sv_add(char *fname)
       superv->files[i][fname_len] = '\00';
       superv->count++;
 
-      printf("Added new file, index is: %d, we have now %d  files on the server.\n", i, superv->count);
+      if (DEBUG_LEVEL > 1) printf("Added new file, index is: %d, we have now %d  files on the server.\n", i, superv->count);
 
-      if ( (i+1) < F_LIMIT )
-      { // there is free space for at least one more file name, lets mark the end
-
+      if ( endTest == 0 && (i+1) < F_LIMIT )
+      { // We are at the end of the list and there is free space for at least one more file name.
+        // Lets mark the new end:
         strncpy(superv->files[i+1], "/END",4);
         superv->files[i+1][4] = '\00';
       }
@@ -193,7 +193,7 @@ int f_sv_del(char *fname)
   char errmsg[100];
 
   // shared memory name needs a extra slash in front
-  printf("File supervisor removes file: %s\n",fname );
+  if (DEBUG_LEVEL > 1) printf("File supervisor removes file: %s\n",fname );
   //
 
   // create new shm segment, return error if already there
@@ -257,7 +257,7 @@ struct file_supervisor *f_sv_getlist()
   struct file_supervisor *superv;
 
   // shared memory name needs a extra slash in front
-  printf("Getting file supervisor: \n" );
+  if (DEBUG_LEVEL > 1) printf("Getting file supervisor. \n" );
   //
 
   // create new shm segment, return error if already there

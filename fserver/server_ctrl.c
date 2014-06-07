@@ -6,41 +6,14 @@
 #include <fserver.h>
 #include <helpers.h>
 
-#define MAX_CYCLE 10
+#define MAX_CYCLE 20
 int clean_up();
-int print_curr_files()
-{
-  struct file_supervisor *superv = f_sv_getlist();
-  if (superv->count == 0)
-  {
-    printf("There are no files at the moment.\n");
-    return 0;
-  }
-  
-  printf("We have %d files:\n", superv->count);
-  int i = 0;
-  while (1)
-  { //breaks if end of list reached 
-
-    if (strncmp(superv->files[i], "/END", 4) == 0)
-      break;
-
-    if ( superv->files[i][0] != '\00' )
-    {
-      printf("%d \t %s\n", i, superv->files[i]);
-    }
-    i++;
-
-  }
-  printf("\n");
-  return 0;
-}
-  
+   
 int main (int argc, char **argv)
 {
   int retcode;
 
-  printf("\n Welcome to the TCP/SHM File Servrer!\n\n");
+  if (DEBUG_LEVEL > 0) printf("\n Welcome to the TCP/SHM File Servrer!\n\n");
   // set up shared mem for the file supervisor
   retcode = f_sv_setup_shm();
   handle_my_error(retcode, "Couldnt set up shm for file supervisor", PROCESS_EXIT);
@@ -53,28 +26,28 @@ int main (int argc, char **argv)
       break;
     }
     cyc_count++;
-    printf("\nCycle count: round %d\n", cyc_count);
+    if (DEBUG_LEVEL > 0) printf("\nCycle count: round %d\n", cyc_count);
 
     struct cmd_info *cmd = get_cmd();
     if ( cmd == NULL )
     {
-      printf("Error while getting command.\n");
-      printf("Review the command file and try again...\n");
-      break;
+      if (DEBUG_LEVEL > 0) printf("Error while getting command.\n");
+      if (DEBUG_LEVEL > 0) printf("Verify your command ...\n");
+      continue;
     }
 
-    printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
+    if (DEBUG_LEVEL > 0) printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
 
     char *buf = NULL;
     switch ( cmd->cmd )
     { // LIST, CREATE, READ, UPDATE, DELETE, STOP
       case LIST:
-        printf("LIST\n");
+        if (DEBUG_LEVEL > 0) printf("LIST\n");
         buf = prnt_ans(cmd, 0);
         break;
 
       case CREATE:
-        printf("CREATE\n");
+        if (DEBUG_LEVEL > 0) printf("CREATE\n");
 
         // add entry to file superisor
         retcode = f_sv_add(cmd->fname);
@@ -99,12 +72,12 @@ int main (int argc, char **argv)
         break;
 
       case READ:
-        printf("READ\n");
+        if (DEBUG_LEVEL > 0) printf("READ\n");
         buf = prnt_ans(cmd, 1);
         break;
 
       case UPDATE:
-        printf("UPDATE\n");
+        if (DEBUG_LEVEL > 0) printf("UPDATE\n");
 
         retcode = update_shm_f(cmd->fname, "Updated place holder");
         if ( retcode < 0 )
@@ -119,7 +92,7 @@ int main (int argc, char **argv)
         break;
 
       case DELETE:
-        printf("DELETE\n");
+        if (DEBUG_LEVEL > 0) printf("DELETE\n");
 
         // delete entry on file supervisor
         retcode = f_sv_del(cmd->fname);
@@ -144,12 +117,12 @@ int main (int argc, char **argv)
         break;
 
       case STOP:
-        printf("STOP\n");
+        if (DEBUG_LEVEL > 0) printf("STOP\n");
         cyc_count = MAX_CYCLE;
         break;
 
       default:
-        printf("DO not know.\n");
+        if (DEBUG_LEVEL > 0) printf("DO not know.\n");
         break;
     }
 
@@ -167,7 +140,7 @@ int main (int argc, char **argv)
     free(cmd);
   }
 
-  printf("\nStopping server\n");
+  if (DEBUG_LEVEL > 0) printf("\nStopping server\n");
   clean_up();
   return 0;
 }
@@ -176,7 +149,7 @@ int clean_up()
 {
   struct file_supervisor *fs = f_sv_getlist();
 
-  printf("Cleaning all shared memory\n");
+  if (DEBUG_LEVEL > 0) printf("Cleaning all shared memory\n");
   // clean all files from shared memory
   if ( fs != NULL )
   {
