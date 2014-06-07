@@ -1,14 +1,12 @@
 CREATE a 6\n
 CREATE ab 6\n
+LIST\n
+READ ab\n
 CREATE abc 6\n
+UPDATE ab 9\n
 CREATE abcd 6\n
+LIST\n
 CREATE abcde 6\n
+LIST\n
 READ ab\n
 STOP\n
-UPDATE abc 5\n
-CREATE abcdef 6\n
-LIST\n
-DELETE abcde\n
-LIST\n
-LIST\n
-

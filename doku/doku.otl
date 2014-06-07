@@ -381,6 +381,8 @@ Fazit für das ganze Projekt
 		[X] Funktion munmap() anschauen
 			: Wirklich nötig für shared Memory? -> JA
 		[X] print answers to buffer
+		[_] Create file: compare given length to actual length
+		[_] Create file: make sure that no file with the same name as the file supervisor can be created
 		[_] 1h Semaphore implementieren
 		[_] file content: replace place holder with real input
 		[_] 2h Client kann Server stoppen

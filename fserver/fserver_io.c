@@ -304,7 +304,9 @@ char *prnt_ans (struct cmd_info *cinfo, int success)
         if(success)
         { // 
           buf = calloc(MAX_ANSW_LEN, sizeof(char));
-          snprintf(buf, MAX_ANSW_LEN, "FILECONTENT %s %d\n%s", cinfo->fname, cinfo->content_len, get_shm_f(cinfo->fname));
+          char *content = get_shm_f(cinfo->fname);
+          int content_len = strlen(content);
+          snprintf(buf, MAX_ANSW_LEN, "FILECONTENT %s %d\n%s", cinfo->fname, content_len, content);
           buf = realloc(buf, strlen(buf)); 
         }
         else

@@ -10,7 +10,7 @@
 #include<helpers.h>
 #include<fserver.h>
 
-const char *superv_name = "/leffotsirC";
+const char *superv_name = "leffotsirC";
 // name for the file supervisor shm segment
 
 int f_sv_dupl_check(char *fname)
@@ -141,10 +141,7 @@ int f_sv_add(char *fname)
   // Map shared memory object
   superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if(superv == MAP_FAILED)
-  {
-    handle_error(-1, "mmap failed", NO_EXIT);
-    return -1;
-  }
+    return handle_error(-1, "mmap failed", NO_EXIT);
 
   int i = 0;
   while(1)
@@ -193,6 +190,7 @@ int f_sv_del(char *fname)
   int fd;
   int fname_len = strlen(fname);
   struct file_supervisor *superv;
+  char errmsg[100];
 
   // shared memory name needs a extra slash in front
   printf("File supervisor removes file: %s\n",fname );
@@ -200,8 +198,10 @@ int f_sv_del(char *fname)
 
   // create new shm segment, return error if already there
   fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if(handle_error(fd, "f_sv_del: Could not open shm", NO_EXIT) == -1)
+  if( fd < 0 )
   {
+    snprintf(errmsg, 100, "f_sv_del: Could not open shm for file %s.", fname);
+    handle_error(fd, errmsg, NO_EXIT);
     return -1;
   }
   //
@@ -209,7 +209,8 @@ int f_sv_del(char *fname)
   superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if(superv == MAP_FAILED)
   {
-    handle_error(-1, "f_sv_del: mmap failed", NO_EXIT);
+    snprintf(errmsg, 100, "f_sv_del: mmap for file %s failed.", fname);
+    handle_ptr_error(superv, errmsg, NO_EXIT);
     return -1;
   }
 
@@ -220,7 +221,8 @@ int f_sv_del(char *fname)
     // check if we are inbound
     if( i >= F_LIMIT )
     {
-      printf("f_sv_del: %s not found.\n", fname);
+      snprintf(errmsg, 100, "f_sv_del: file %s not found.", fname);
+      handle_my_error(-1, errmsg, NO_EXIT);
       return -1;
     }
 
@@ -260,7 +262,7 @@ struct file_supervisor *f_sv_getlist()
 
   // create new shm segment, return error if already there
   fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if(handle_error(fd, "Could not open shm for file supervisor", NO_EXIT) == -1)
+  if(handle_error(fd, "f_sv_getlist(): Could not open shm for file supervisor", NO_EXIT) == -1)
   {
     return NULL;
   }
@@ -269,7 +271,7 @@ struct file_supervisor *f_sv_getlist()
   superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if(superv == MAP_FAILED)
   {
-    handle_error(-1, "mmap failed", NO_EXIT);
+    handle_ptr_error(superv, "f_sv_getlist(): mmap failed", NO_EXIT);
     return NULL;
   }
 

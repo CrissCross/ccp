@@ -3,14 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <shm_f_action.h>
 #include <fserver.h>
-#include <f_supervisor.h>
-#include <fserver_io.h>
 #include <helpers.h>
 
 #define MAX_CYCLE 10
-int clean_mem(struct cmd_info *cinfo);
+int clean_up();
 int print_curr_files()
 {
   struct file_supervisor *superv = f_sv_getlist();
@@ -67,43 +64,83 @@ int main (int argc, char **argv)
     }
 
     printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
-    //char *shm_content;
-    char *buf;
+
+    char *buf = NULL;
     switch ( cmd->cmd )
     { // LIST, CREATE, READ, UPDATE, DELETE, STOP
       case LIST:
         printf("LIST\n");
         buf = prnt_ans(cmd, 0);
-        printf("%s\n", buf);
         break;
 
       case CREATE:
         printf("CREATE\n");
+
+        // add entry to file superisor
         retcode = f_sv_add(cmd->fname);
-        create_shm_f(cmd->fname, "place holder");
+        if ( retcode < 0 )
+        {
+          handle_my_error(retcode, "Error CREATE: Adding file supervisor failed.", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        // create shared memory
+        retcode = create_shm_f(cmd->fname, "place holder");
+        if ( retcode < 0 )
+        {
+          handle_my_error(retcode, "Error CREATE: Couldnt create shared memory.", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        // success!
         buf = prnt_ans(cmd, 1);
-        printf("%s\n", buf);
         break;
 
       case READ:
         printf("READ\n");
         buf = prnt_ans(cmd, 1);
-        printf("%s\n", buf);
         break;
 
       case UPDATE:
         printf("UPDATE\n");
-        update_shm_f(cmd->fname, "Updated place holder");
+
+        retcode = update_shm_f(cmd->fname, "Updated place holder");
+        if ( retcode < 0 )
+        {
+          handle_my_error(retcode, "Error UPDATE: Couldnt update shared memory.", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        // success!
         buf = prnt_ans(cmd, 1);
-        printf("%s\n", buf);
         break;
 
       case DELETE:
         printf("DELETE\n");
+
+        // delete entry on file supervisor
         retcode = f_sv_del(cmd->fname);
-        delete_shm_f(cmd->fname);
+        if ( retcode < 0 )
+        {
+          handle_my_error(retcode, "Error DELETE: Removing file supervisor failed.", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        // delete shared mem
+        retcode = delete_shm_f(cmd->fname);
+        if ( retcode < 0 )
+        {
+          handle_my_error(retcode, "Error DELETE: Couldnt delete shared memory.", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        // success!
         buf = prnt_ans(cmd, 1);
-        printf("%s\n", buf);
         break;
 
       case STOP:
@@ -115,17 +152,52 @@ int main (int argc, char **argv)
         printf("DO not know.\n");
         break;
     }
-    clean_mem(cmd);
+
+    if ( buf != NULL )
+    { // we have to print an answer and to free it afterwards
+      // print answer to socket
+      printf("%s\n", buf);
+      // answer buffer and cmd info struct not needed anymore
+      free(buf);
+    }
+    
+    // clean cmd struct
+    free(cmd->fname);
+    //free(cinfo->content);
+    free(cmd);
   }
 
-  f_sv_clean_shm();
+  printf("\nStopping server\n");
+  clean_up();
   return 0;
 }
 
-int clean_mem(struct cmd_info *cinfo)
+int clean_up()
 {
-  free(cinfo->fname);
-  //free(cinfo->content);
-  free(cinfo);
+  struct file_supervisor *fs = f_sv_getlist();
+
+  printf("Cleaning all shared memory\n");
+  // clean all files from shared memory
+  if ( fs != NULL )
+  {
+    int i = 0;
+    while (1)
+    { //breaks if end of list reached
+
+      if ( strncmp(fs->files[i], "/END",4) == 0)
+        break;
+
+      else if ( fs->files[i][0] !=  '\00' )
+      {
+        delete_shm_f(fs->files[i]);
+        f_sv_del(fs->files[i]);
+      } 
+
+      i++;
+    }
+  }
+
+  // clean file supervisor
+  f_sv_clean_shm();
   return 0;
 }

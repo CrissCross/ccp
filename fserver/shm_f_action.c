@@ -174,6 +174,7 @@ int delete_shm_f(char *fname)
   return 0;
 }
 
+
 //int main (int argc, char **argv)
 //{
 //  char *fname = "cheerup";
