@@ -28,6 +28,7 @@ int main (int argc, char **argv)
     cyc_count++;
     if (DEBUG_LEVEL > 0) printf("\nCycle count: round %d\n", cyc_count);
 
+    // get next command to handle
     struct cmd_info *cmd = get_cmd();
     if ( cmd == NULL )
     {
@@ -35,7 +36,6 @@ int main (int argc, char **argv)
       if (DEBUG_LEVEL > 0) printf("Verify your command ...\n");
       continue;
     }
-
     if (DEBUG_LEVEL > 0) printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
 
     char *buf = NULL;
@@ -49,12 +49,27 @@ int main (int argc, char **argv)
       case CREATE:
         if (DEBUG_LEVEL > 0) printf("CREATE\n");
 
+        retcode = sem_create(cmd->fname);
+        if (retcode < 0)
+        {
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        retcode = sem_dec_w(cmd->fname);
+        if (retcode < 0)
+        {
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
         // add entry to file superisor
         retcode = f_sv_add(cmd->fname);
         if ( retcode < 0 )
         {
           handle_my_error(retcode, "Error CREATE: Adding file supervisor failed.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
+          retcode = sem_inc_w(cmd->fname);
           break;
         }
 
@@ -64,35 +79,95 @@ int main (int argc, char **argv)
         {
           handle_my_error(retcode, "Error CREATE: Couldnt create shared memory.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
+          retcode = sem_inc_w(cmd->fname);
           break;
         }
 
         // success!
+        //
+        retcode = sem_inc_w(cmd->fname);
         buf = prnt_ans(cmd, 1);
         break;
 
       case READ:
         if (DEBUG_LEVEL > 0) printf("READ\n");
+
+        // Überprüfen, ob schon jemand liest
+        retcode = sem_dec_r(cmd->fname);
+        // inkrement reader count
+        // read_count++;
+        // if ( read_count == 1)
+        // { // es ist der erste Leser -> write sem dec
+        //   sem_dec_w(cmd->name);
+        // }
+        retcode = sem_inc_r(cmd->fname);
+        /// lesen
+        retcode = sem_dec_r(cmd->fname);
+        // read_count--;
+        // if ( read_count == 0)
+        // { // es ist war der einzige Leser -> write sem ink
+        //   sem_ink_w(cmd->name);
+        // }
+        retcode = sem_inc_r(cmd->fname);
+
         buf = prnt_ans(cmd, 1);
         break;
 
       case UPDATE:
         if (DEBUG_LEVEL > 0) printf("UPDATE\n");
 
+        // semaphore dekrementieren
+        retcode = sem_dec_w(cmd->fname);
+        if (retcode < 0)
+        {
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+        
+        // Überprüfen, ob gerade gelesen wird
+        retcode = sem_get_r(cmd->fname);
+        if (retcode == 0)
+        {
+          handle_my_error(-1, "File is being read at the moment, cannot delete", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          sem_inc_w(cmd->fname);
+          break;
+        }
+
         retcode = update_shm_f(cmd->fname, "Updated place holder");
         if ( retcode < 0 )
         {
           handle_my_error(retcode, "Error UPDATE: Couldnt update shared memory.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
+          sem_inc_w(cmd->fname);
           break;
         }
 
         // success!
+        sem_inc_w(cmd->fname);
         buf = prnt_ans(cmd, 1);
         break;
 
       case DELETE:
         if (DEBUG_LEVEL > 0) printf("DELETE\n");
+
+        // semaphore dekrementieren
+        retcode = sem_dec_w(cmd->fname);
+        if (retcode < 0)
+        {
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
+        // Überprüfen, ob gerade gelesen wird
+        retcode = sem_get_r(cmd->fname);
+        if (retcode == 0)
+        {
+          handle_my_error(-1, "File is being read at the moment, cannot delete", NO_EXIT);
+          buf = prnt_ans(cmd, 0);
+          sem_inc_w(cmd->fname);
+          break;
+        }
 
         // delete entry on file supervisor
         retcode = f_sv_del(cmd->fname);
@@ -100,6 +175,7 @@ int main (int argc, char **argv)
         {
           handle_my_error(retcode, "Error DELETE: Removing file supervisor failed.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
+          sem_inc_w(cmd->fname);
           break;
         }
 
@@ -109,10 +185,12 @@ int main (int argc, char **argv)
         {
           handle_my_error(retcode, "Error DELETE: Couldnt delete shared memory.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
+          sem_inc_w(cmd->fname);
           break;
         }
 
         // success!
+        sem_inc_w(cmd->fname);
         buf = prnt_ans(cmd, 1);
         break;
 
