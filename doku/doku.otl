@@ -385,8 +385,10 @@ Fazit für das ganze Projekt
 		[_] Create file: make sure that no file with the same name as the file supervisor can be created
 		[_] 1h Semaphore implementieren
 		[_] file content: replace place holder with real input
-		[_] 2h Client kann Server stoppen
+		[X] 2h Client kann Server stoppen
 		[_] 1h Client kann Shared Memory räumen
 		[_] 1h Client kann Shared Memory aufsetzen
 		[_] 3h TCP Server einbauen
 		[_] 2h TCP Client programmieren
+		[_] Längst mögl. Dateiname an Maximum von Semaphorenamen (251) anpassen
+			- man sem_overview -> named semaphores

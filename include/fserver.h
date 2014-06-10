@@ -36,3 +36,14 @@ struct file_supervisor *f_sv_getlist();
 // fserver_io.c -> get input / write to output buffer
 struct cmd_info *get_cmd();
 char *prnt_ans (struct cmd_info *cinfo, int success);
+
+
+// sem_f_action -> semaphore ops
+int sem_create(char *fname);
+int sem_dec_r(char *fname);
+int sem_dec_w(char *fname);
+int sem_inc_r (char* fname);
+int sem_inc_w (char* fname);
+int sem_get_r (char* fname);
+int sem_get_w (char* fname);
+int sem_kill (char* fname);

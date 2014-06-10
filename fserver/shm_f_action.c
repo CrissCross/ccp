@@ -175,27 +175,3 @@ int delete_shm_f(char *fname)
   return 0;
 }
 
-
-//int main (int argc, char **argv)
-//{
-//  char *fname = "cheerup";
-//  char *fcontent = "FCB FCB FCB!";
-//  char *fnewcontent = "Nananana Nananana Ehhh Ehhh Ehhh FCB!";
-//  create_shm_f(fname, fcontent);
-//  char *shm_content = get_shm_f(fname);
-//  if(shm_content == NULL)
-//  {
-//    return -1;
-//  }
-//  printf("read shm content:\n%s\n\n", shm_content);
-//
-//  update_shm_f(fname, fnewcontent);
-//  shm_content = get_shm_f(fname);
-//  if(shm_content == NULL)
-//  {
-//    return -1;
-//  }
-//  printf("read new content:\n%s\n\n", shm_content);
-//  delete_shm_f(fname);
-//  return 0;
-//}
