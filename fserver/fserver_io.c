@@ -123,12 +123,21 @@ struct cmd_info *get_cmd()
       { // READ, 1 argument
         cinfo->cmd = READ;
 
-        int ret = get_args(tempbuf, 1, cinfo);
-        if ( ret < 0 )
-        { // getargs failed
-          handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
+        if (tempbuf == NULL)
+        {
+          if ( DEBUG_LEVEL > 0 ) printf("What file shall I read?\n");
           free(cinfo);
           cinfo = NULL;
+        }
+        else 
+        {
+          int ret = get_args(tempbuf, 1, cinfo);
+          if ( ret < 0 )
+          { // getargs failed
+            handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
+            free(cinfo);
+            cinfo = NULL;
+          }
         }
       }
       else if (strcmp(cmd_snip, "UPDATE") == 0)
@@ -170,7 +179,7 @@ struct cmd_info *get_cmd()
         cinfo = NULL;
       }
 
-      free(free_tempbuf);
+      if ( free_tempbuf != NULL ) free(free_tempbuf);
       break;
     }
 
@@ -378,12 +387,21 @@ char *prnt_list()
 { // print list to buffer and return it
   char *buf = NULL;
   struct file_supervisor *superv = f_sv_getlist();
+  if ( superv == NULL )
+  {
+    char *tempbuf = "NOFILES\\n";
+    buf = calloc(strlen(tempbuf), sizeof(char));
+    sprintf(buf, tempbuf);
+    return buf;
+  }
+
   if (superv->count == 0)
   {
     char *tempbuf = "There are no files at the moment.\\n";
     buf = calloc(strlen(tempbuf), sizeof(char));
     sprintf(buf, tempbuf);
-    return 0;
+    return buf;
+
   }
   
   int cur_pos;

@@ -115,6 +115,14 @@ Mindstorming
 		| U | X | X | X | X | O |
 		| D | X | X | X | X | X |
 		| L | X | O | O | X | O |
+		: Geschrieben werden darf nur, wenn die Datei nicht berührt wird. Dazu
+		: gehöhrt auch die Liste. Bei der Liste ist aber weniger problematisch,
+		: da der Dateiinhalt nicht benötigt wird, sondern nur der Name.  Lesen
+		: geht nur, falls die Datei gerade gelesen oder gar nicht berührt wird. 
+		; 
+		: Um dies zu realisieren, wird ein read/write Lock mit zwei Semaphoren
+		: realisiert, genau so wie auf dieser Seite beschrieben:
+		; http://cs.gmu.edu/cne/modules/ipc/orange/readsem.html
 	- DS: der Datei-Supervisor
 		: Der DS ist nichts anderes als ein Array von Dateinamen. Weil man laut
 		: Aufgabenstellung das echte Dateisystem des OS nicht berühren darf,
@@ -392,3 +400,13 @@ Fazit für das ganze Projekt
 		[_] 2h TCP Client programmieren
 		[_] Längst mögl. Dateiname an Maximum von Semaphorenamen (251) anpassen
 			- man sem_overview -> named semaphores
+	BUGS
+		[_] Lesen von Befehl (fserver/fserver_io).: Was wenn tempbuf == NULL??
+			- try command:
+			; CREATE\n
+			: Segmentation fault, da im tempbuf nach weiteren Parametern gesucht wird...
+		[_] Bei UPDATE und READ zuerst kontrollieren, ob die Datei existiert.
+			- try command (file abc doesnt exist in the file system)
+			; READ abc\n
+			: Gibt seg fault
+

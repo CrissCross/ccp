@@ -44,13 +44,12 @@ int sem_dec_r(char *fname)
   char sem_fname_r[strlen(fname) + 3];
   sprintf(sem_fname_r, "/%s_r", fname);
 
-  if (DEBUG_LEVEL > 1) printf("Testing read semaphore: %s\n",sem_fname_r );
-
   // Get semaphore by name
+  if (DEBUG_LEVEL > 1) printf("Decreasing read semaphore: %s\n",sem_fname_r );
   sem_t *r_sem_addr = sem_open(sem_fname_r, 0);
 
   // try to decrement
-  retcode = sem_trywait(r_sem_addr);
+  retcode = sem_wait(r_sem_addr);
   if (retcode < 0 )
   {
     handle_error(retcode, "Couldnt decrement read semaphore", NO_EXIT);
@@ -67,7 +66,7 @@ int sem_dec_w(char *fname)
   char sem_fname_w[strlen(fname) + 3];
   sprintf(sem_fname_w, "/%s_w", fname);
 
-  if (DEBUG_LEVEL > 1) printf("Testing write semaphore: %s\n",sem_fname_w );
+  if (DEBUG_LEVEL > 1) printf("Decreasing write semaphore: %s\n",sem_fname_w );
 
   // Get semaphore by name
   sem_t *w_sem_addr = sem_open(sem_fname_w, 0);
@@ -95,7 +94,6 @@ int sem_inc_r (char* fname)
   // Get semaphore by name
   sem_t *r_sem_addr = sem_open(sem_fname_r, 0);
 
-  // try to decrement
   retcode = sem_post(r_sem_addr);
   if (retcode < 0 )
   {
@@ -113,7 +111,7 @@ int sem_inc_w (char* fname)
   char sem_fname_w[strlen(fname) + 3];
   sprintf(sem_fname_w, "/%s_w", fname);
 
-  if (DEBUG_LEVEL > 1) printf("Increasing read semaphore: %s\n",sem_fname_w );
+  if (DEBUG_LEVEL > 1) printf("Increasing write semaphore: %s\n",sem_fname_w );
 
   // Get semaphore by name
   sem_t *w_sem_addr = sem_open(sem_fname_w, 0);

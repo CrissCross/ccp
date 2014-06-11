@@ -10,54 +10,8 @@
 #include<helpers.h>
 #include<fserver.h>
 
+// unique name for the file supervisor shm segment
 const char *superv_name = "leffotsirC";
-// name for the file supervisor shm segment
-
-int f_sv_dupl_check(char *fname)
-{
-  int fd;
-  int fname_len = strlen(fname);
-  struct file_supervisor *superv;
-
-  if (DEBUG_LEVEL > 1) printf("File supervisor checks if file %s already exists.\n", fname );
-
-  // get shm segment with the file supervisor
-  fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if(handle_error(fd, "f_sv_del: Could not open shm", NO_EXIT) == -1)
-  {
-    return -1;
-  }
-  //
-  // Map shared memory object
-  superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if(superv == MAP_FAILED)
-  {
-    handle_error(-1, "f_sv_del: mmap failed", NO_EXIT);
-    return -1;
-  }
-
-  int i = 0;
-  while(1)
-  { // loop and find file
-    
-    // check if we are inbound
-    if( i >= F_LIMIT )
-    {
-      handle_my_error(-1, "f_sv_dupl_check: file not found.", NO_EXIT);
-      return -1;
-    }
-
-    if(strncmp(superv->files[i], fname, fname_len) == 0 )
-    { // we found it
-      
-      return 1;
-      break;
-    }
-    i++;
-
-  }
-  return 0;
-}
 
 int f_sv_clean_shm()
 {
@@ -71,6 +25,35 @@ int f_sv_clean_shm()
 
   return handle_error(retcode, "Deletion of shm for file supervisor", NO_EXIT);
 
+}
+
+int get_index (char *fname, struct file_supervisor *superv)
+{ // find the file name in the list and return the index
+
+  int fname_len = strlen(fname);
+  char errmsg[100];
+
+  int i = 0;
+  while(1)
+  { // loop through the files, find file and remove name
+    
+    // check if we are inbound
+    if( i >= F_LIMIT )
+    {
+      snprintf(errmsg, 100, "f_sv_del: file %s not found.", fname);
+      handle_my_error(-1, errmsg, NO_EXIT);
+      return -1;
+    }
+
+    if(strncmp(superv->files[i], fname, fname_len) == 0 )
+    { // this is the file we have been looking for
+      return i;
+    }
+    i++;
+  }
+  
+  // not reached
+  return -1;
 }
 
 int f_sv_setup_shm()
@@ -162,6 +145,7 @@ int f_sv_add(char *fname)
       // copy file name and increase counter
       strncpy(superv->files[i], fname, (fname_len+1) < F_MAX_LEN ? (fname_len+1) : F_MAX_LEN);
       superv->files[i][fname_len] = '\00';
+      superv->reader_count[i] = 0;
       superv->count++;
 
       if (DEBUG_LEVEL > 1) printf("Added new file, index is: %d, we have now %d  files on the server.\n", i, superv->count);
@@ -187,67 +171,31 @@ int f_sv_add(char *fname)
 
 int f_sv_del(char *fname)
 {
-  int fd;
-  int fname_len = strlen(fname);
-  struct file_supervisor *superv;
-  char errmsg[100];
-
   // shared memory name needs a extra slash in front
   if (DEBUG_LEVEL > 1) printf("File supervisor removes file: %s\n",fname );
-  //
 
-  // create new shm segment, return error if already there
-  fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if( fd < 0 )
-  {
-    snprintf(errmsg, 100, "f_sv_del: Could not open shm for file %s.", fname);
-    handle_error(fd, errmsg, NO_EXIT);
+  // getting supervisor struct
+  struct file_supervisor *superv = f_sv_getlist();
+  if ( superv == NULL )
     return -1;
+
+  // getting index of the file in the struct
+  int index = get_index(fname, superv);
+  if ( index < 0 )
+    return index;
+
+  // if the index is equal to the total ammount of files.... 
+  if (index - superv->count >= 0)
+  { // ...it is the last file in the array, lets mark the end 
+    strncpy(superv->files[index], "/END",4);
+    superv->files[index][4] = '\00';
   }
-  //
-  // Map shared memory object
-  superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if(superv == MAP_FAILED)
-  {
-    snprintf(errmsg, 100, "f_sv_del: mmap for file %s failed.", fname);
-    handle_ptr_error(superv, errmsg, NO_EXIT);
-    return -1;
+  else
+  { // there are other file names after the current
+    superv->files[index][0] = '\00';
   }
+  superv->count--;
 
-  int i = 0;
-  while(1)
-  { // loop through the files, find file and remove name
-    
-    // check if we are inbound
-    if( i >= F_LIMIT )
-    {
-      snprintf(errmsg, 100, "f_sv_del: file %s not found.", fname);
-      handle_my_error(-1, errmsg, NO_EXIT);
-      return -1;
-    }
-
-    if(strncmp(superv->files[i], fname, fname_len) == 0 )
-    { // this is the file we have been looking for
-      
-      // decrease number of files count
-      superv->count--;
-
-      if (i - superv->count >= 0)
-      { // I am the last file in the array, lets mark the end 
-          strncpy(superv->files[i], "/END",4);
-          superv->files[i][4] = '\00';
-      }
-      else
-      { // there are other file names after the current
-        superv->files[i][0] = '\00';
-      }
-
-      break;
-    }
-
-    i++;
-
-  }
   return 0;
 }
 
@@ -276,4 +224,40 @@ struct file_supervisor *f_sv_getlist()
   }
 
   return superv;
+}
+
+int f_sv_addreader(char *fname)
+{
+
+  // getting supervisor struct from shared memory
+  struct file_supervisor *superv = f_sv_getlist();
+  if ( superv == NULL )
+    return -1;
+
+
+  // getting index of the file 
+  int index = get_index(fname, superv);
+  if ( index < 0 )
+    return index;
+
+
+  // increment on readers count
+  superv->reader_count[index]++;
+
+  return superv->reader_count[index];
+}
+
+int f_sv_delreader(char *fname)
+{
+
+  // getting supervisor struct from shared memory
+  struct file_supervisor *superv = f_sv_getlist();
+
+  // getting index of the file 
+  int index = get_index(fname, superv);
+
+  // increment on readers count
+  superv->reader_count[index]--;
+
+  return superv->reader_count[index];
 }

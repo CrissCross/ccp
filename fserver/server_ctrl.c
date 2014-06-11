@@ -69,7 +69,7 @@ int main (int argc, char **argv)
         {
           handle_my_error(retcode, "Error CREATE: Adding file supervisor failed.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
-          retcode = sem_inc_w(cmd->fname);
+          sem_inc_w(cmd->fname);
           break;
         }
 
@@ -79,38 +79,48 @@ int main (int argc, char **argv)
         {
           handle_my_error(retcode, "Error CREATE: Couldnt create shared memory.", NO_EXIT);
           buf = prnt_ans(cmd, 0);
-          retcode = sem_inc_w(cmd->fname);
+          sem_inc_w(cmd->fname);
           break;
         }
 
         // success!
         //
-        retcode = sem_inc_w(cmd->fname);
+        sem_inc_w(cmd->fname);
         buf = prnt_ans(cmd, 1);
         break;
 
       case READ:
         if (DEBUG_LEVEL > 0) printf("READ\n");
 
-        // Überprüfen, ob schon jemand liest
-        retcode = sem_dec_r(cmd->fname);
-        // inkrement reader count
-        // read_count++;
-        // if ( read_count == 1)
-        // { // es ist der erste Leser -> write sem dec
-        //   sem_dec_w(cmd->name);
-        // }
-        retcode = sem_inc_r(cmd->fname);
-        /// lesen
-        retcode = sem_dec_r(cmd->fname);
-        // read_count--;
-        // if ( read_count == 0)
-        // { // es ist war der einzige Leser -> write sem ink
-        //   sem_ink_w(cmd->name);
-        // }
-        retcode = sem_inc_r(cmd->fname);
+        // lock reader count semaphore (blocking) 
+        sem_dec_r(cmd->fname);
+        retcode = f_sv_addreader(cmd->fname);
+        if ( retcode == 1 )
+        { // we are the first reader, lets lock for writing
+          retcode = sem_dec_w(cmd->fname);
+          if ( retcode < 0 )
+          { // cannot lock write semaphore. Obviously sb is busy on the file
+            handle_my_error(-1, "READ: file is being changed, cannot read", NO_EXIT);
+            buf = prnt_ans(cmd, 0);
+
+            sem_inc_r(cmd->fname);
+            f_sv_delreader(cmd->fname);
+            sem_inc_r(cmd->fname);
+            break;
+          }
+        }
+        sem_inc_r(cmd->fname);
 
         buf = prnt_ans(cmd, 1);
+
+        // finished reading
+        sem_dec_r(cmd->fname);
+        retcode = f_sv_delreader(cmd->fname);
+        if ( retcode == 0 ) // we were the last reader
+          retcode = sem_inc_w(cmd->fname);
+
+        sem_inc_r(cmd->fname);
+
         break;
 
       case UPDATE:
@@ -120,26 +130,17 @@ int main (int argc, char **argv)
         retcode = sem_dec_w(cmd->fname);
         if (retcode < 0)
         {
+          sem_inc_w(cmd->fname);
           buf = prnt_ans(cmd, 0);
           break;
         }
         
-        // Überprüfen, ob gerade gelesen wird
-        retcode = sem_get_r(cmd->fname);
-        if (retcode == 0)
-        {
-          handle_my_error(-1, "File is being read at the moment, cannot delete", NO_EXIT);
-          buf = prnt_ans(cmd, 0);
-          sem_inc_w(cmd->fname);
-          break;
-        }
-
         retcode = update_shm_f(cmd->fname, "Updated place holder");
         if ( retcode < 0 )
         {
           handle_my_error(retcode, "Error UPDATE: Couldnt update shared memory.", NO_EXIT);
-          buf = prnt_ans(cmd, 0);
           sem_inc_w(cmd->fname);
+          buf = prnt_ans(cmd, 0);
           break;
         }
 
@@ -159,16 +160,6 @@ int main (int argc, char **argv)
           break;
         }
 
-        // Überprüfen, ob gerade gelesen wird
-        retcode = sem_get_r(cmd->fname);
-        if (retcode == 0)
-        {
-          handle_my_error(-1, "File is being read at the moment, cannot delete", NO_EXIT);
-          buf = prnt_ans(cmd, 0);
-          sem_inc_w(cmd->fname);
-          break;
-        }
-
         // delete entry on file supervisor
         retcode = f_sv_del(cmd->fname);
         if ( retcode < 0 )
@@ -178,7 +169,6 @@ int main (int argc, char **argv)
           sem_inc_w(cmd->fname);
           break;
         }
-
         // delete shared mem
         retcode = delete_shm_f(cmd->fname);
         if ( retcode < 0 )
@@ -188,9 +178,10 @@ int main (int argc, char **argv)
           sem_inc_w(cmd->fname);
           break;
         }
+        // delete semaphore
+        sem_kill(cmd->fname);
 
         // success!
-        sem_inc_w(cmd->fname);
         buf = prnt_ans(cmd, 1);
         break;
 
@@ -225,30 +216,32 @@ int main (int argc, char **argv)
 
 int clean_up()
 {
-  struct file_supervisor *fs = f_sv_getlist();
+  struct file_supervisor *fsv = f_sv_getlist();
 
   if (DEBUG_LEVEL > 0) printf("Cleaning all shared memory\n");
   // clean all files from shared memory
-  if ( fs != NULL )
+  if ( fsv != NULL )
   {
     int i = 0;
     while (1)
     { //breaks if end of list reached
 
-      if ( strncmp(fs->files[i], "/END",4) == 0)
+      if ( strncmp(fsv->files[i], "/END",4) == 0)
         break;
 
-      else if ( fs->files[i][0] !=  '\00' )
+      else if ( fsv->files[i][0] !=  '\00' )
       {
-        delete_shm_f(fs->files[i]);
-        f_sv_del(fs->files[i]);
+        delete_shm_f(fsv->files[i]);
+        sem_kill(fsv->files[i]);
+        f_sv_del(fsv->files[i]);
+
       } 
 
       i++;
     }
   }
 
-  // clean file supervisor
+  // clean shared memory for file supervisor
   f_sv_clean_shm();
   return 0;
 }

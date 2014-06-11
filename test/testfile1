@@ -1,2 +1,6 @@
-
-DELETE abc\n
+LIST\n
+CREATE Datei1 5\n
+READ Datei1\n
+READ Datei1\n
+LIST\n
+STOP\n
