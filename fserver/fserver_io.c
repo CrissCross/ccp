@@ -34,20 +34,16 @@ struct cmd_info *get_cmd()
   if (DEBUG_LEVEL > 1) printf("Reading lines:\n");
 
   while( i < MAX_LINES_READ_PER_FILE )
-  { // read max 15 lines
+  { // breaks if  max lines per file are read
+    // get line -> cmd_line will also contain newline char if it exists
     read = getline(&cmd_line, &len, stdin);
     if(handle_my_error(read, "Error reading input", NO_EXIT) == -1)
-    {
-      //cinfo == NULL;
       break;
-      //return NULL;
-    }
 
     if (read == 0)
     {
       if (DEBUG_LEVEL > 1) printf("File is empty\n\n");
       break;
-      //return NULL;
     }
     else if (strcmp(cmd_line,"\n") == 0)
     {
@@ -66,8 +62,7 @@ struct cmd_info *get_cmd()
         break;
       }
 
-
-      // length of cmd line without "\n" at the end
+      // length of cmd line without '\\n' and '\n' (new line char)  at the end
       int rel_len = (int) read - 2;
 
       // copy line and cut '/n' at the end:
@@ -76,14 +71,15 @@ struct cmd_info *get_cmd()
       line[rel_len - 1] = '\00';
 
       // create tempbuf for parameter seperation process
-      char *tempbuf = strdup(line);
+      char *tempbuf = strndup(line, rel_len);
+
       // pointer to start of char array to free allocated memory when finished
       char *free_tempbuf = tempbuf;
 
       // Let's see if there are parameters:
       char *cmd_snip = strsep(&tempbuf, " ");
 
-      if (DEBUG_LEVEL > 1) printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
+      if (DEBUG_LEVEL > 0) printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
 
       // Check if command is Uppercase if not, break
       if ( valid_cmd(cmd_snip) == 0 )
@@ -194,20 +190,30 @@ struct cmd_info *get_cmd()
 
 int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
 {
-  if (DEBUG_LEVEL > 1) printf("Show snippet: %s\n", cmd_snip);
+  if (DEBUG_LEVEL > 1) printf("Getting arguments %s for command nr %d.\n", cmd_snip, cinfo->cmd);
+  if (cmd_snip == NULL )
+  {
+    handle_my_error(-1, "There are no arguments", NO_EXIT);
+    return -1;
+  }
   // create tempbuf for parameter seperation process
   char *tempbuf = strdup(cmd_snip);
+  
   // pointer to start of char array to free allocated memory when finished
   char *free_tempbuf = tempbuf;
 
   // Let's see if there are parameters:
   cmd_snip = strsep(&tempbuf, " ");
+
+  // If two args needed, one is not enough
   if (tempbuf == NULL && args_needed == 2)
   {
-    handle_my_error(-1, "No arguments found in cmd", NO_EXIT);
+    handle_my_error(-1, "Two arguments needed but found only one", NO_EXIT);
     free(free_tempbuf);
     return -1;
   }
+
+  // validate filename (must be alphanumeric)
   if(valid_fname(cmd_snip) == 0)
   {
     handle_my_error(-1, "Invalid name", NO_EXIT);
@@ -215,16 +221,17 @@ int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
     return -1;
   }
 
-  // fname seems to be valid, lets copy it to the struct
+  // fname seems to be valid, lets copy it to the cmd struct
   int len = strlen(cmd_snip);
   int new_len = len;
+
   // check if string is terminated by a \0. if not add it 
   if ( cmd_snip[len-1] != '\0' || cmd_snip[len-1] != '\00' )
-  {
     new_len++;
-  }
+
   cinfo->fname = calloc(new_len,sizeof(char));
   strncpy((char *)cinfo->fname, cmd_snip, len);
+
   // make sure that the string has a correct ending
   cinfo->fname[new_len-1] = '\00';
 
@@ -235,8 +242,8 @@ int get_args (char *cmd_snip, int args_needed, struct cmd_info *cinfo)
   }
 
   cmd_snip = strsep(&tempbuf, " ");
-  if (tempbuf == NULL)
-  { //TODO
+  if (tempbuf != NULL)
+  { //TODO, Too many arguments, ignoring the rest
   }
 
   const char *err_msg;

@@ -30,30 +30,61 @@ int f_sv_clean_shm()
 int get_index (char *fname, struct file_supervisor *superv)
 { // find the file name in the list and return the index
 
-  int fname_len = strlen(fname);
+  int f_len = strlen(fname);
   char errmsg[100];
 
   int i = 0;
   while(1)
   { // loop through the files, find file and remove name
     
+    int index_f_len = strlen(superv->files[i]);
+    int endTest = strncmp(superv->files[i], "/END", 4);
+    
     // check if we are inbound
-    if( i >= F_LIMIT )
+    if( i >= F_LIMIT || endTest == 0)
     {
-      snprintf(errmsg, 100, "f_sv_del: file %s not found.", fname);
+      snprintf(errmsg, 100, "get_index: file %s not found.", fname);
       handle_my_error(-1, errmsg, NO_EXIT);
       return -1;
     }
 
-    if(strncmp(superv->files[i], fname, fname_len) == 0 )
+    if( f_len == index_f_len && strncmp(superv->files[i], fname, f_len) == 0 )
     { // this is the file we have been looking for
       return i;
     }
+
     i++;
   }
   
   // not reached
   return -1;
+}
+
+struct file_supervisor *f_sv_getlist()
+{
+  int fd;
+  struct file_supervisor *superv;
+
+  // shared memory name needs a extra slash in front
+  if (DEBUG_LEVEL > 1) printf("Getting file supervisor. \n" );
+  //
+
+  // create new shm segment, return error if already there
+  fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
+  if(handle_error(fd, "f_sv_getlist(): Could not open shm for file supervisor", NO_EXIT) == -1)
+  {
+    return NULL;
+  }
+  //
+  // Map shared memory object
+  superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if(superv == MAP_FAILED)
+  {
+    handle_ptr_error(superv, "f_sv_getlist(): mmap failed", NO_EXIT);
+    return NULL;
+  }
+
+  return superv;
 }
 
 int f_sv_setup_shm()
@@ -106,25 +137,12 @@ int f_sv_setup_shm()
 
 int f_sv_add(char *fname)
 {
-  int fd;
-  int fname_len = strlen(fname);
-  struct file_supervisor *superv;
-
-  // shared memory name needs a extra slash in front
   if (DEBUG_LEVEL > 1) printf("File supervisor adds file: %s\n",fname );
-  //
 
-  // create new shm segment, return error if already there
-  fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if(handle_error(fd, "Could not open shm", NO_EXIT) == -1)
-  {
+  int fname_len = strlen(fname);
+  struct file_supervisor *superv = f_sv_getlist();
+  if ( superv == NULL )
     return -1;
-  }
-  //
-  // Map shared memory object
-  superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if(superv == MAP_FAILED)
-    return handle_error(-1, "mmap failed", NO_EXIT);
 
   int i = 0;
   while(1)
@@ -160,7 +178,7 @@ int f_sv_add(char *fname)
       break;
     }
     else
-    {
+    { // this index is already taken by another file
       i++;
     }
     // not reached
@@ -184,8 +202,11 @@ int f_sv_del(char *fname)
   if ( index < 0 )
     return index;
 
-  // if the index is equal to the total ammount of files.... 
-  if (index - superv->count >= 0)
+  if(DEBUG_LEVEL > 1) printf("name = %s, index = %d\n", fname, index);
+
+  // if the next file is '\END', this file is the new end 
+  int endTest = strncmp(superv->files[index+1], "/END", 4);
+  if (endTest == 0)
   { // ...it is the last file in the array, lets mark the end 
     strncpy(superv->files[index], "/END",4);
     superv->files[index][4] = '\00';
@@ -197,33 +218,6 @@ int f_sv_del(char *fname)
   superv->count--;
 
   return 0;
-}
-
-struct file_supervisor *f_sv_getlist()
-{
-  int fd;
-  struct file_supervisor *superv;
-
-  // shared memory name needs a extra slash in front
-  if (DEBUG_LEVEL > 1) printf("Getting file supervisor. \n" );
-  //
-
-  // create new shm segment, return error if already there
-  fd = shm_open(superv_name, O_RDWR, S_IRUSR | S_IWUSR);
-  if(handle_error(fd, "f_sv_getlist(): Could not open shm for file supervisor", NO_EXIT) == -1)
-  {
-    return NULL;
-  }
-  //
-  // Map shared memory object
-  superv = mmap(NULL, sizeof(superv), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if(superv == MAP_FAILED)
-  {
-    handle_ptr_error(superv, "f_sv_getlist(): mmap failed", NO_EXIT);
-    return NULL;
-  }
-
-  return superv;
 }
 
 int f_sv_addreader(char *fname)
@@ -260,4 +254,10 @@ int f_sv_delreader(char *fname)
   superv->reader_count[index]--;
 
   return superv->reader_count[index];
+}
+
+int f_sv_find_file (char *fname)
+{ // returns -1 if not found
+  struct file_supervisor *fsv = f_sv_getlist();
+  return get_index(fname, fsv);
 }

@@ -14,5 +14,5 @@ LIST\n
 LIST\n
 CREATE abcdef 6\n
 LIST\n
-READ ab\n
+CREATE\n
 STOP\n

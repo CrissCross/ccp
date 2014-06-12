@@ -92,6 +92,12 @@ int main (int argc, char **argv)
       case READ:
         if (DEBUG_LEVEL > 0) printf("READ\n");
 
+        if ( f_sv_find_file(cmd->fname) < 0 )
+        {
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
+
         // lock reader count semaphore (blocking) 
         sem_dec_r(cmd->fname);
         retcode = f_sv_addreader(cmd->fname);
@@ -125,6 +131,12 @@ int main (int argc, char **argv)
 
       case UPDATE:
         if (DEBUG_LEVEL > 0) printf("UPDATE\n");
+
+        if ( f_sv_find_file(cmd->fname) < 0 )
+        {
+          buf = prnt_ans(cmd, 0);
+          break;
+        }
 
         // semaphore dekrementieren
         retcode = sem_dec_w(cmd->fname);

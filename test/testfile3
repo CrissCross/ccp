@@ -1,0 +1,5 @@
+CREATE a 5\n
+CREATE ab 7\n
+CREATE abc 9\n
+DELETE ab\n
+LIST\n

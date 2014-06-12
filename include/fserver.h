@@ -21,6 +21,7 @@ int f_sv_add(char *fname);
 int f_sv_del(char *fname);
 int f_sv_addreader(char *fname);
 int f_sv_delreader(char *fname);
+int f_sv_find_file(char *fname);
 
 struct file_supervisor
 {
@@ -47,6 +48,7 @@ int delete_shm_f(char *fname);
 // fserver_io.c -> get input / write to output buffer
 struct cmd_info *get_cmd();
 char *prnt_ans (struct cmd_info *cinfo, int success);
+char *prnt_list();
 
 // sem_f_action -> semaphore ops
 int sem_create(char *fname);

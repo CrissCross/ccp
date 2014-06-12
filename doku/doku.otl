@@ -391,7 +391,7 @@ Fazit für das ganze Projekt
 		[X] print answers to buffer
 		[_] Create file: compare given length to actual length
 		[_] Create file: make sure that no file with the same name as the file supervisor can be created
-		[_] 1h Semaphore implementieren
+		[X] 2h Semaphore implementieren
 		[_] file content: replace place holder with real input
 		[X] 2h Client kann Server stoppen
 		[_] 1h Client kann Shared Memory räumen
@@ -405,7 +405,7 @@ Fazit für das ganze Projekt
 			- try command:
 			; CREATE\n
 			: Segmentation fault, da im tempbuf nach weiteren Parametern gesucht wird...
-		[_] Bei UPDATE und READ zuerst kontrollieren, ob die Datei existiert.
+		[X] Bei UPDATE und READ zuerst kontrollieren, ob die Datei existiert.
 			- try command (file abc doesnt exist in the file system)
 			; READ abc\n
 			: Gibt seg fault
