@@ -1,6 +1,13 @@
 LIST\n
+
 CREATE Datei1 5\n
+
 READ Datei1\n
+
 READ Datei1\n
+
 LIST\n
+
+LIST\n
+
 STOP\n

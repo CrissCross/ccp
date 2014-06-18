@@ -383,7 +383,7 @@ Fazit für das ganze Projekt
 	: unten nochmals aufgelistet. Bestimmt werde ich den einen oder anderen in
 	: den nächsten 2,3 Wochen vor der Abgabe noch bewältigen können. Sie werden
 	: dann mit einem 'X' gekennzeichnet werden. 
-	Noch nicht implementierte Tasks ( 1. Juni )
+	Noch nicht implementierte Tasks
 		[X] getcmd Funktoin nochmals anschauen
 			: Werden wirklich alle allozierten Speicherbereiche wieder befreit?
 		[X] Funktion munmap() anschauen
@@ -400,6 +400,7 @@ Fazit für das ganze Projekt
 		[_] 2h TCP Client programmieren
 		[_] Längst mögl. Dateiname an Maximum von Semaphorenamen (251) anpassen
 			- man sem_overview -> named semaphores
+		[_] sem und shm Funktionen vereinheitlichen und an einem Ort definieren	
 	BUGS
 		[_] Lesen von Befehl (fserver/fserver_io).: Was wenn tempbuf == NULL??
 			- try command:

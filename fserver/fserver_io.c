@@ -15,11 +15,10 @@
 // Length of buffer that hold the answer
 #define MAX_ANSW_LEN 3000
 
-int valid_cmd (char *str);
+int io_valid_cmd (char *str);
 
 int valid_fname(char *str);
 
-int get_args (char *cmd_snip, int args_needed, struct cmd_info *cargs);
 
 char *prnt_list();
 
@@ -82,7 +81,7 @@ struct cmd_info *get_cmd()
       if (DEBUG_LEVEL > 0) printf("Befehl ist: %s und rest ist %s\n", cmd_snip, tempbuf);
 
       // Check if command is Uppercase if not, break
-      if ( valid_cmd(cmd_snip) == 0 )
+      if ( io_valid_cmd(cmd_snip) == 0 )
       {
         if (DEBUG_LEVEL > 1) printf("Unknown command\n");
         free(free_tempbuf);
@@ -338,6 +337,31 @@ char *prnt_ans (struct cmd_info *cinfo, int success)
   }
 
   return buf;
+}
+
+int io_valid_cmd (char *str)
+{ // validate a command (Uppercase letter, not longer than "UPDATE")
+  int str_len = strlen(str);
+  if (str_len > strlen("UPDATE"))
+  {
+    handle_my_error(-1, "Command is too long", NO_EXIT);
+    return 0;
+  }
+
+  // in case last char is a 0-terminator, do not check last byte
+  if ( str[str_len-1] == '\0' || str[str_len-1] == '\00' )
+    str_len--;
+
+  for ( int i = 0; i < str_len; i++)
+  {
+    if ( isalpha(str[i]) == 0 || isupper(str[i] == 0) )
+    {
+      handle_my_error(-1, "Command is not uppercasealphabetic", NO_EXIT);
+      return 0;
+    }
+  }
+
+  return 1;
 }
 
 int valid_cmd (char *str)

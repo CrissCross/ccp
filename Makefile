@@ -5,10 +5,19 @@
 CC = gcc
 CFLAGS = -Wall -g -O2 -std=gnu99 -I include -lrt -lbsd -lpthread
 
-objects = server_ctrl.o fserver_io.o f_supervisor.o shm_f_action.o sem_f_action.o error_handler.o
+# objects = server_ctrl.o fserver_io.o f_supervisor.o shm_f_action.o sem_f_action.o error_handler.o
+objects = tcp_server.o fserver_io.o f_supervisor.o shm_f_action.o sem_f_action.o error_handler.o
 
+#fserver_app : $(objects)
+#	cc $(CFLAGS) -o fserver_app $(objects)
 fserver_app : $(objects)
 	cc $(CFLAGS) -o fserver_app $(objects)
+
+tcp_server.o : fserver/tcp_server.c
+	cc $(CFLAGS) -c fserver/tcp_server.c
+
+tcp_client : client/tcp_client.c error_handler.o
+	cc $(CFLAGS) client/tcp_client.c error_handler.o -o tcp_client
 
 server_ctrl.o : fserver/server_ctrl.c
 	cc $(CFLAGS) -c fserver/server_ctrl.c 
@@ -29,7 +38,7 @@ error_handler.o : lib/error_handler.c
 	cc $(CFLAGS) -c lib/error_handler.c
 
 clean :
-	rm fserver_app $(objects)
+	rm fserver_app tcp_client tcp_server $(objects)
 
 #clean:
 #	rm -f cscope.out makeOut/*

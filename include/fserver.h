@@ -1,5 +1,5 @@
 // Global variables
-#define DEBUG_LEVEL 0 // 0 (disabled) - 5 (verbose)
+#define DEBUG_LEVEL 1 // 0 (disabled) - 5 (verbose)
 #define F_LIMIT 256 // max number of files
 #define F_MAX_LEN 100 // max length of a file name
 #define MAX_CONTENT 1000 // max length of file content
@@ -47,8 +47,10 @@ int delete_shm_f(char *fname);
 
 // fserver_io.c -> get input / write to output buffer
 struct cmd_info *get_cmd();
+int valid_cmd (char *str);
 char *prnt_ans (struct cmd_info *cinfo, int success);
 char *prnt_list();
+int get_args (char *cmd_snip, int args_needed, struct cmd_info *cargs);
 
 // sem_f_action -> semaphore ops
 int sem_create(char *fname);
