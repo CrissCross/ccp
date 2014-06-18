@@ -1,5 +1,5 @@
 // Global variables
-#define DEBUG_LEVEL 1 // 0 (disabled) - 5 (verbose)
+#define DEBUG_LEVEL 0 // 0 (disabled) - 5 (verbose)
 #define F_LIMIT 256 // max number of files
 #define F_MAX_LEN 100 // max length of a file name
 #define MAX_CONTENT 1000 // max length of file content
