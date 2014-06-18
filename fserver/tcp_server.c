@@ -49,6 +49,8 @@ struct cmd_info *tcp_get_cmd(char *msg);
 
 int handle_children(int cli_sock);
 int handle_papa();
+char* get_arg0(char *buf);
+int get_content(struct cmd_info *ci, char *content);
 int clean_up();
 
 void usage(char *argv0, char *msg) {
@@ -217,9 +219,11 @@ int main(int argc, char *argv[])
                 else if( cli_socket > 0)
                 {
                         
-                        printf("Opened socket #%d.\n", cli_socket);
+                        if (DEBUG_LEVEL > 0)
+                                printf("Opened socket #%d.\n", cli_socket);
                         /* client_socket is connected to a client! */
-                        printf("Handling client %s\n", inet_ntoa(cli_addr.sin_addr));
+                        if (DEBUG_LEVEL > 0)
+                                printf("Handling client %s\n", inet_ntoa(cli_addr.sin_addr));
 
                         retcode = fork();
                         handle_my_error(retcode, "fork failed", PROCESS_EXIT);
@@ -277,9 +281,13 @@ int handle_children(int cli_socket)
 
                 msg_buf[count] = '\00';
 
+                char *buf = NULL;
+
                 struct cmd_info *cmd = tcp_get_cmd(msg_buf);
                 if (cmd == NULL) {
                         handle_my_error(-1, "Could not interpret command", NO_EXIT);
+                        char * err = "ERRORINCMD\n";
+                        write(cli_socket, err, strlen(err));
                         continue;
                 }
                 
@@ -287,7 +295,6 @@ int handle_children(int cli_socket)
                         printf("Read cpmmand: enum = %d fname = %s content len = %d....\n", (int)cmd->cmd, cmd->fname, cmd->content_len);
                 //print_ans();
 
-                char *buf = NULL;
 
                 switch ( cmd->cmd )
                 { // LIST, CREATE, READ, UPDATE, DELETE, STOP
@@ -324,7 +331,7 @@ int handle_children(int cli_socket)
                                 }
 
                                 // create shared memory
-                                retc = create_shm_f(cmd->fname, "place holder");
+                                retc = create_shm_f(cmd->fname, cmd->content);
                                 if ( retc < 0 )
                                 {
                                         handle_my_error(retc, "Error CREATE: Couldnt create shared memory.", NO_EXIT);
@@ -397,7 +404,7 @@ int handle_children(int cli_socket)
                                         break;
                                 }
 
-                                retc = update_shm_f(cmd->fname, "Updated place holder");
+                                retc = update_shm_f(cmd->fname, cmd->content);
                                 if ( retc < 0 )
                                 {
                                         handle_my_error(retc, "Error UPDATE: Couldnt update shared memory.", NO_EXIT);
@@ -450,6 +457,8 @@ int handle_children(int cli_socket)
                         case STOP:
                                 if (DEBUG_LEVEL > 0) printf("STOP\n");
                                 stop = 1;
+                                char * err = "ERRORINCMD\n";
+                                write(cli_socket, err, strlen(err));
                                 break;
 
                         default:
@@ -457,10 +466,6 @@ int handle_children(int cli_socket)
                                 break;
                 }
 
-                if (cmd->cmd == STOP) {
-                        printf("STOP received, client is finished\n");
-                        break;
-                }
 
                 if ( buf != NULL )
                 { // we have to print an answer and to free it afterwards
@@ -469,7 +474,7 @@ int handle_children(int cli_socket)
                         if (count <= 0)
                         {
                                 handle_error(count, "Could not read from socket", NO_EXIT);
-                                break;
+                                stop = 1;
                         }
 
                         //printf("%s\n", buf);
@@ -478,9 +483,12 @@ int handle_children(int cli_socket)
                 }
 
                 // clean cmd struct
-                free(cmd->fname);
-                //free(cinfo->content);
-                free(cmd);
+                if (cmd->fname != 0)
+                        free(cmd->fname);
+                if (cmd->content != 0)
+                        free(cmd->content);
+                if (cmd != 0)
+                        free(cmd);
 
 
         }
@@ -720,19 +728,23 @@ struct cmd_info *tcp_get_cmd(char *msg)
         cmd_line[cmd_line_len - 2] = '\00';
 
         char *cmd_ptr = cmd_line;
+        //char *arg0 = cmd_line;
 
-        // Let's see if there are parameters:
-        char *cmd_snip = strsep(&cmd_ptr, " ");
+        // Separeate arg0 from arg1 and get ptr to arg1:
+        //cmd_ptr = get_arg0(cmd_ptr);
+        strsep(&cmd_ptr, " ");
 
-        if (DEBUG_LEVEL > 0) printf("Befehl ist: %s und rest ist %s\n", cmd_snip, cmd_ptr);
-
-        // Check if command is Uppercase if not, break
-        if ( valid_cmd(cmd_snip) == 0 )
+        // valid arg0 
+        if ( valid_cmd(cmd_line) == 0 )
         {
-                if (DEBUG_LEVEL > 1) printf("Unknown command\n");
+                if (DEBUG_LEVEL > 1) printf("get_arg0: command validation erroR\n");
                 free(ptr2buf);
                 return NULL;
         }
+
+        char *cmd_snip = cmd_line;
+
+        if (DEBUG_LEVEL > 0) printf("Befehl ist: %s und rest ist %s\n", cmd_snip, cmd_ptr);
 
         // cmd seems to be valid. allocate mem for cmd struct
         cinfo = (struct cmd_info *) malloc(sizeof(struct cmd_info));
@@ -750,13 +762,29 @@ struct cmd_info *tcp_get_cmd(char *msg)
         { // CREATE, 2 arguments
                 cinfo->cmd = CREATE;
 
-                // get file name
-                int ret = get_args(cmd_ptr, 2, cinfo);
-                if ( ret < 0 )
-                { // getargs failed
-                        handle_my_error(-1, "Couldnt get arguments", NO_EXIT);
+                if ( cmd_ptr == NULL ){
+                        handle_my_error(-1, "Arguments for CREATE missing", NO_EXIT);
                         free(cinfo);
                         cinfo = NULL;
+                }
+
+                // get file name
+                else {
+                        int ret = get_args(cmd_ptr, 2, cinfo);
+                        if ( ret < 0 )
+                        { // getargs failed
+                                handle_my_error(-1, "Error  getting Aarguments", NO_EXIT);
+                                free(cinfo);
+                                cinfo = NULL;
+                        }
+                        // get content
+                        ret = get_content(cinfo, content);
+                        if ( ret < 0 )
+                        { // getargs failed
+                                handle_my_error(-1, "Couldnt get content", NO_EXIT);
+                                free(cinfo);
+                                cinfo = NULL;
+                        }
                 }
         }
         else if (strcmp(cmd_snip, "READ") == 0)
@@ -792,6 +820,14 @@ struct cmd_info *tcp_get_cmd(char *msg)
                         free(cinfo);
                         cinfo = NULL;
                 }
+                // get content
+                ret = get_content(cinfo, content);
+                if ( ret < 0 )
+                { // getargs failed
+                        handle_my_error(-1, "Couldnt get content", NO_EXIT);
+                        free(cinfo);
+                        cinfo = NULL;
+                }
         }
         else if (strcmp(cmd_snip, "DELETE") == 0)
         { // DELETE, 1 argumnet
@@ -807,7 +843,8 @@ struct cmd_info *tcp_get_cmd(char *msg)
                 }
         }
         else if (strcmp(cmd_snip, "STOP") == 0)
-        { // DELETE, 1 argumnet
+        { // STOP, 1 argumnet
+                printf("REceived STOP\n");
                 cinfo->cmd = STOP;
                 cinfo->fname = NULL;
                 cinfo->content_len = 0;
@@ -827,6 +864,28 @@ struct cmd_info *tcp_get_cmd(char *msg)
         return cinfo;
 
 };
+
+int get_content(struct cmd_info *ci, char *content)
+{
+        if(content == NULL)
+        {
+                printf("get_content: Content missing\n");
+                return -1;
+        }
+
+        int realen = strlen(content);
+        if (realen < ci->content_len)
+        {
+                printf("get_content: Content is shorter than the given length\n");
+                return -1;
+        }
+        ci->content = calloc(ci->content_len + 1, sizeof(char));
+        strncpy(ci->content, content, ci->content_len);
+        ci->content[ci->content_len] = '\00';
+
+        return 0;
+}
+
 int clean_up()
 {
   struct file_supervisor *fsv = f_sv_getlist();
