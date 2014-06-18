@@ -345,7 +345,7 @@ Fazit nach dem zweiten Sprint, 31. Mai
 		[X] 1h DS: Liste mit aktuellen Dateien ausgeben
 		[X] 1h Dateien im DS suchen
 		[X] 2h Input von Befehlen per Datei 
-		[/] 2h Output von Antworten 
+		[_] 2h Output von Antworten 
 			- writes to stdout
 Fazit nach dem dritten Sprint, 1. Juni
 	: Als erstes setzte ich die bisher programmierten Einzelteile ( Shared
@@ -389,20 +389,20 @@ Fazit für das ganze Projekt
 		[X] Funktion munmap() anschauen
 			: Wirklich nötig für shared Memory? -> JA
 		[X] print answers to buffer
-		[_] Create file: compare given length to actual length
+		[X] Create file: compare given length to actual length
 		[_] Create file: make sure that no file with the same name as the file supervisor can be created
 		[X] 2h Semaphore implementieren
-		[_] file content: replace place holder with real input
-		[X] 2h Client kann Server stoppen
+		[X] file content: replace place holder with real input
+		[_] 2h Client kann Server stoppen
 		[_] 1h Client kann Shared Memory räumen
 		[_] 1h Client kann Shared Memory aufsetzen
-		[_] 3h TCP Server einbauen
-		[_] 2h TCP Client programmieren
+		[X] 3h TCP Server einbauen
+		[X] 2h TCP Client programmieren
 		[_] Längst mögl. Dateiname an Maximum von Semaphorenamen (251) anpassen
 			- man sem_overview -> named semaphores
 		[_] sem und shm Funktionen vereinheitlichen und an einem Ort definieren	
 	BUGS
-		[_] Lesen von Befehl (fserver/fserver_io).: Was wenn tempbuf == NULL??
+		[X] Lesen von Befehl (fserver/fserver_io).: Was wenn tempbuf == NULL??
 			- try command:
 			; CREATE\n
 			: Segmentation fault, da im tempbuf nach weiteren Parametern gesucht wird...
@@ -410,4 +410,3 @@ Fazit für das ganze Projekt
 			- try command (file abc doesnt exist in the file system)
 			; READ abc\n
 			: Gibt seg fault
-

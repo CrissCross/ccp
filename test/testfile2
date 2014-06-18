@@ -1,18 +1,34 @@
 CREATE a 6\n
+
 CREATE ab 6\n
+
 LIST\n
+
 READ ab\n
+
 CREATE abc 6\n
+abcdef
+
 UPDATE ab 9\n
+abcdefghi
+
 CREATE abcd 6\n
+abcdefgh
+
 CREATE abcde 6\n
+abcdef
+
 LIST\n
-DELETE ab\n
+
 LIST\n
-CREATE zzzz 8\n
+
 LIST\n
-LIST\n
+
 CREATE abcdef 6\n
+fadsfafa
+
 LIST\n
+
 CREATE\n
+
 STOP\n

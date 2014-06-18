@@ -14,7 +14,7 @@
 #include <helpers.h>
 
 #define PORT 60606
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 
 #define MAX_CMDS_READ_PER_FILE 15      // max lines taken from an input file
 #define MSG_CAP 4000                    // Message capacity / Max message size 
@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
                 }
                 else if (cmd_ready && (count_tot > 0)) { // send message
 
+                        printf("\nSending to server:\n%s\n", msg_buf);
                         count = send(sock, msg_buf, count_tot, 0);
                         if (count != count_tot)
                                 handle_my_error(-1, "send() sent a different number of bytes than expected",

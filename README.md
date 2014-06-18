@@ -2,15 +2,44 @@
 ## POSIX Shared Memory File Server
 Lecturer: Nico Schottelius
 Student: Cristoffel Gehring
-### Compile Server:
+### Server:
+Compile:
 ```
 $ make
 ```
-### Run Server
+Start server:
 ```
-$ ./fserver < input_file_with_commands
+$ ./fserver_app
+```
+Stop server:
+```
+$ ./pkill fserver_app
+```
+### Client
+Compile:
+```
+$ make tcp_client
+```
+Run client:
+```
+$ ./tcp_client < file_with_commands
 ```
 Example:
+
 ```
-$ ./fserver < test/testfile2
+$ ./tcp_client < test/listfiles
 ```
+### Command Files
+List of commands to be send to the server. Commands must be seperated by a newline.
+Example:
+
+```
+LIST\n
+
+CREATE Datei1 5\n
+asdffd
+
+READ Datei1\n
+
+```
+

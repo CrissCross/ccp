@@ -19,9 +19,6 @@ tcp_server.o : fserver/tcp_server.c
 tcp_client : client/tcp_client.c error_handler.o
 	cc $(CFLAGS) client/tcp_client.c error_handler.o -o tcp_client
 
-server_ctrl.o : fserver/server_ctrl.c
-	cc $(CFLAGS) -c fserver/server_ctrl.c 
-
 fserver_io.o : fserver/fserver_io.c
 	cc $(CFLAGS) -c fserver/fserver_io.c
 
@@ -38,7 +35,7 @@ error_handler.o : lib/error_handler.c
 	cc $(CFLAGS) -c lib/error_handler.c
 
 clean :
-	rm fserver_app tcp_client tcp_server $(objects)
+	rm fserver_app tcp_client $(objects)
 
 #clean:
 #	rm -f cscope.out makeOut/*
