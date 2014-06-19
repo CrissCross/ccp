@@ -13,7 +13,7 @@ $ ./fserver_app
 ```
 Stop server:
 ```
-$ ./pkill fserver_app
+$ pkill fserver_app
 ```
 ### Client
 Compile:

@@ -77,7 +77,6 @@ static void handler(int signum)
                 pid = waitpid (WAIT_ANY, &status, WNOHANG);
                 if (pid < 0) {
                         perror ("waitpid");
-                        printf("After error");
                         break;
                 }
                 if (pid == 0)
